@@ -186,6 +186,11 @@ type API interface {
 	// Minimum server version: 5.26
 	DeletePreferencesForUser(userID string, preferences []model.Preference) *model.AppError
 
+	// CreateUserAccessToken creates a new access token
+	// @tag User
+	// Minimum server version: 5.38
+	CreateUserAccessToken(token *model.UserAccessToken) (*model.UserAccessToken, *model.AppError)
+
 	// GetTeamIcon gets the team icon.
 	//
 	// @tag Team

@@ -284,6 +284,10 @@ func (api *PluginAPI) DeletePreferencesForUser(userID string, preferences []mode
 	return api.app.DeletePreferences(userID, preferences)
 }
 
+func (api *PluginAPI) CreateUserAccessToken(token *model.UserAccessToken) (*model.UserAccessToken, *model.AppError) {
+	return api.app.CreateUserAccessToken(token)
+}
+
 func (api *PluginAPI) UpdateUser(user *model.User) (*model.User, *model.AppError) {
 	return api.app.UpdateUser(user, true)
 }

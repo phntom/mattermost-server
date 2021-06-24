@@ -1306,6 +1306,35 @@ func (s *apiRPCServer) DeletePreferencesForUser(args *Z_DeletePreferencesForUser
 	return nil
 }
 
+type Z_CreateUserAccessTokenArgs struct {
+	A *model.UserAccessToken
+}
+
+type Z_CreateUserAccessTokenReturns struct {
+	A *model.UserAccessToken
+	B *model.AppError
+}
+
+func (g *apiRPCClient) CreateUserAccessToken(token *model.UserAccessToken) (*model.UserAccessToken, *model.AppError) {
+	_args := &Z_CreateUserAccessTokenArgs{token}
+	_returns := &Z_CreateUserAccessTokenReturns{}
+	if err := g.client.Call("Plugin.CreateUserAccessToken", _args, _returns); err != nil {
+		log.Printf("RPC call to CreateUserAccessToken API failed: %s", err.Error())
+	}
+	return _returns.A, _returns.B
+}
+
+func (s *apiRPCServer) CreateUserAccessToken(args *Z_CreateUserAccessTokenArgs, returns *Z_CreateUserAccessTokenReturns) error {
+	if hook, ok := s.impl.(interface {
+		CreateUserAccessToken(token *model.UserAccessToken) (*model.UserAccessToken, *model.AppError)
+	}); ok {
+		returns.A, returns.B = hook.CreateUserAccessToken(args.A)
+	} else {
+		return encodableError(fmt.Errorf("API CreateUserAccessToken called but not implemented."))
+	}
+	return nil
+}
+
 type Z_GetTeamIconArgs struct {
 	A string
 }
