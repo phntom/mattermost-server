@@ -1,3 +1,51 @@
-FROM golang:1.15.5
+FROM golang:1.15.5 as builder
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
+
+ENV MM_NO_DOCKER="true"
+ENV RUN_SERVER_IN_BACKGROUND="false"
+ENV MM_CLUSTERSETTINGS_ENABLE="true"
+ENV BUILD_ENTERPRISE_READY="false"
+ENV BUILD_VERSION="5.36"
+ENV BUILD_NUMBER="5.36.2"
+ENV BUILD_DATE="Thu Jun 24 14:05:12 UTC 2021"
+ENV BUILD_HASH="c06c0b9b21d976d2344c1d27951f3574fb572b03"
+
+WORKDIR /home
+RUN git clone https://github.com/mattermost/mattermost-server.git
+
+ENV BUILD_ENTERPRISE_READY="false"
+WORKDIR /home/mattermost-server
+RUN git pull
+RUN git checkout release-$BUILD_VERSION
+
+COPY services/telemetry/telemetry.go services/telemetry/telemetry.go
+COPY config/client.go config/client.go
+COPY app/server.go app/admin.go app/user.go app/
+COPY model/gitlab/google.go model/gitlab/google.go
+
+RUN go build -o mattermost -ldflags '-X "github.com/mattermost/mattermost-server/v5/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY" -X "github.com/mattermost/mattermost-server/v5/model.CurrentVersion=${BUILD_VERSION}.0" -X "github.com/mattermost/mattermost-server/v5/model.BuildNumber=$BUILD_NUMBER" -X "github.com/mattermost/mattermost-server/v5/model.BuildDate=$BUILD_DATE" -X "github.com/mattermost/mattermost-server/v5/model.BuildHash=$BUILD_HASH" -X "github.com/mattermost/mattermost-server/v5/model.BuildHashEnterprise=none"' ./cmd/mattermost/main.go
+
+# docker build . -f build/Dockerfile.buildenv -t aaa
+# docker run -v $PWD/build/:/out aaa cp -v mattermost /out/
+# docker build build -f build/Dockerfile.release -t phntom/mattermost-team-edition:5.36.0
+# docker push phntom/mattermost-team-edition:5.36.0
+
+FROM mattermost/mattermost-team-edition:5.36.1
+RUN wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz && \
+  wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz.sig && \
+  wget -P prepackaged_plugins https://github.com/matterpoll/matterpoll/releases/download/v1.4.0/com.github.matterpoll.matterpoll-1.4.0.tar.gz && \
+  wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz && \
+  wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz.sig && \
+  sed -i'' 's/this.props.isLicensed&&this.props.enableSignUpWithGoogle/this.props.enableSignUpWithGoogle/g' client/810.*.js
+
+#USER 0
+#RUN apk add --no-cache git make musl-dev go libc6-compat
+#USER mattermost
+#RUN go get github.com/derekparker/delve/cmd/dlv
+#ENV PATH=/mattermost/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mattermost/go/bin/
+#CMD dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /mattermost/bin/mattermost
+
+COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
+
+# mattermost/mattermost-build-server:20201119_golang-1.15.5

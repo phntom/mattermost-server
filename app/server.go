@@ -595,7 +595,7 @@ func NewServer(options ...Option) (*Server, error) {
 
 	s.ReloadConfig()
 
-	allowAdvancedLogging := license != nil && *license.Features.AdvancedLogging
+	allowAdvancedLogging := true
 
 	if s.Audit == nil {
 		s.Audit = &audit.Audit{}
@@ -605,11 +605,9 @@ func NewServer(options ...Option) (*Server, error) {
 		}
 	}
 
-	s.removeUnlicensedLogTargets(license)
 	s.enableLoggingMetrics()
 
 	s.loggerLicenseListenerId = s.AddLicenseListener(func(oldLicense, newLicense *model.License) {
-		s.removeUnlicensedLogTargets(newLicense)
 		s.enableLoggingMetrics()
 	})
 
@@ -870,18 +868,9 @@ func (s *Server) removeUnlicensedLogTargets(license *model.License) {
 }
 
 func (s *Server) startInterClusterServices(license *model.License, app *App) error {
-	if license == nil {
-		mlog.Debug("No license provided; Remote Cluster services disabled")
-		return nil
-	}
-
 	// Remote Cluster service
 
 	// License check
-	if !*license.Features.RemoteClusterService {
-		mlog.Debug("License does not have Remote Cluster services enabled")
-		return nil
-	}
 
 	// Config check
 	if !*s.Config().ExperimentalSettings.EnableRemoteClusterService {
@@ -907,10 +896,6 @@ func (s *Server) startInterClusterServices(license *model.License, app *App) err
 	// Shared Channels service
 
 	// License check
-	if !*license.Features.SharedChannels {
-		mlog.Debug("License does not have shared channels enabled")
-		return nil
-	}
 
 	// Config check
 	if !*s.Config().ExperimentalSettings.EnableSharedChannels {

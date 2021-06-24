@@ -23,8 +23,7 @@ import (
 func (s *Server) GetLogs(page, perPage int) ([]string, *model.AppError) {
 	var lines []string
 
-	license := s.License()
-	if license != nil && *license.Features.Cluster && s.Cluster != nil && *s.Config().ClusterSettings.Enable {
+	if s.Cluster != nil && *s.Config().ClusterSettings.Enable {
 		if info := s.Cluster.GetMyClusterInfo(); info != nil {
 			lines = append(lines, "-----------------------------------------------------------------------------------------------------------")
 			lines = append(lines, "-----------------------------------------------------------------------------------------------------------")
@@ -226,9 +225,8 @@ func (a *App) TestEmail(userID string, cfg *model.Config) *model.AppError {
 	}
 
 	T := i18n.GetUserTranslations(user.Locale)
-	license := a.Srv().License()
 	mailConfig := a.Srv().MailServiceConfig()
-	if err := mail.SendMailUsingConfig(user.Email, T("api.admin.test_email.subject"), T("api.admin.test_email.body"), mailConfig, license != nil && *license.Features.Compliance, ""); err != nil {
+	if err := mail.SendMailUsingConfig(user.Email, T("api.admin.test_email.subject"), T("api.admin.test_email.body"), mailConfig, true, ""); err != nil {
 		return model.NewAppError("testEmail", "app.admin.test_email.failure", map[string]interface{}{"Error": err.Error()}, "", http.StatusInternalServerError)
 	}
 
@@ -239,7 +237,7 @@ func (a *App) TestEmail(userID string, cfg *model.Config) *model.AppError {
 func (s *Server) serverBusyStateChanged(sbs *model.ServerBusyState) {
 	s.Busy.ClusterEventChanged(sbs)
 	if sbs.Busy {
-		mlog.Warn("server busy state activitated via cluster event - non-critical services disabled", mlog.Int64("expires_sec", sbs.Expires))
+		mlog.Warn("server busy state activated via cluster event - non-critical services disabled", mlog.Int64("expires_sec", sbs.Expires))
 	} else {
 		mlog.Info("server busy state cleared via cluster event - non-critical services enabled")
 	}
