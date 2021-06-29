@@ -21,7 +21,7 @@ RUN git checkout release-$BUILD_VERSION
 
 COPY services/telemetry/telemetry.go services/telemetry/telemetry.go
 COPY config/client.go config/client.go
-COPY app/server.go app/admin.go app/user.go app/
+COPY app/server.go app/admin.go app/user.go app/oauth.go app/
 COPY model/gitlab/google.go model/gitlab/google.go
 
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v5/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v5/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go

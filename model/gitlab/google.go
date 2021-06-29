@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mattermost/mattermost-server/v5/shared/mlog"
 	"hash/fnv"
 	"io"
 	"strings"
@@ -35,6 +36,7 @@ type GoogleUser struct {
 }
 
 func init() {
+	mlog.Info("Google provider is initialized")
 	provider := &GoogleProvider{}
 	einterfaces.RegisterOauthProvider(UserAuthServiceGoogle, provider)
 }
@@ -131,5 +133,6 @@ func (m *GoogleProvider) GetUserFromIdToken(idToken string) (*model.User, error)
 }
 
 func (m *GoogleProvider) IsSameUser(dbUser, oauthUser *model.User) bool {
-	return dbUser.AuthService == oauthUser.AuthService && dbUser.AuthData == oauthUser.AuthData
+	return dbUser.AuthService == oauthUser.AuthService &&
+		dbUser.AuthData == oauthUser.AuthData
 }
