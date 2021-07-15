@@ -37,7 +37,8 @@ RUN wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-
   wget -P prepackaged_plugins https://github.com/matterpoll/matterpoll/releases/download/v1.4.0/com.github.matterpoll.matterpoll-1.4.0.tar.gz && \
   wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz && \
   wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz.sig && \
-  sed -i'' 's/this.props.isLicensed&&this.props.enableSignUpWithGoogle/this.props.enableSignUpWithGoogle/g' client/810.*.js
+  sed -i'' 's/this.props.isLicensed&&//g' client/810.*.js && \
+  sed -i'' 's#"/openid/signup"#"/facebook/signup"#g' client/810.*.js
 
 #USER 0
 #RUN apk add --no-cache git make musl-dev go libc6-compat
