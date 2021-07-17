@@ -49,6 +49,10 @@ const (
 	SERVICE_GOOGLE    = "google"
 	SERVICE_OFFICE365 = "office365"
 	SERVICE_OPENID    = "openid"
+	SERVICE_FACEBOOK  = "facebook"
+	SERVICE_LINKEDIN  = "linkedin"
+	SERVICE_GITHUB    = "github"
+	SERVICE_TWITTER   = "twitter"
 
 	GENERIC_NO_CHANNEL_NOTIFICATION = "generic_no_channel"
 	GENERIC_NOTIFICATION            = "generic"
@@ -3134,6 +3138,10 @@ type Config struct {
 	GitLabSettings            SSOSettings
 	GoogleSettings            SSOSettings
 	Office365Settings         Office365Settings
+	LinkedInSettings          SSOSettings
+	FacebookSettings          SSOSettings
+	GitHubSettings            SSOSettings
+	TwitterSettings           SSOSettings
 	OpenIdSettings            SSOSettings
 	LdapSettings              LdapSettings
 	ComplianceSettings        ComplianceSettings
@@ -3194,6 +3202,14 @@ func (o *Config) GetSSOService(service string) *SSOSettings {
 		return o.Office365Settings.SSOSettings()
 	case SERVICE_OPENID:
 		return &o.OpenIdSettings
+	case SERVICE_FACEBOOK:
+		return &o.FacebookSettings
+	case SERVICE_LINKEDIN:
+		return &o.LinkedInSettings
+	case SERVICE_GITHUB:
+		return &o.GitHubSettings
+	case SERVICE_TWITTER:
+		return &o.TwitterSettings
 	}
 
 	return nil
@@ -3232,6 +3248,10 @@ func (o *Config) SetDefaults() {
 	o.Office365Settings.setDefaults()
 	o.GitLabSettings.setDefaults("", "", "", "", "")
 	o.GoogleSettings.setDefaults(GOOGLE_SETTINGS_DEFAULT_SCOPE, GOOGLE_SETTINGS_DEFAULT_AUTH_ENDPOINT, GOOGLE_SETTINGS_DEFAULT_TOKEN_ENDPOINT, GOOGLE_SETTINGS_DEFAULT_USER_API_ENDPOINT, "")
+	o.FacebookSettings.setDefaults("", "", "", "", "")
+	o.LinkedInSettings.setDefaults("", "", "", "", "")
+	o.GitHubSettings.setDefaults("", "", "", "", "")
+	o.TwitterSettings.setDefaults("", "", "", "", "")
 	o.OpenIdSettings.setDefaults(OPENID_SETTINGS_DEFAULT_SCOPE, "", "", "", "#145DBF")
 	o.ServiceSettings.SetDefaults(isUpdate)
 	o.PasswordSettings.SetDefaults()
@@ -3882,6 +3902,22 @@ func (o *Config) Sanitize() {
 
 	if o.GoogleSettings.Secret != nil && *o.GoogleSettings.Secret != "" {
 		*o.GoogleSettings.Secret = FAKE_SETTING
+	}
+
+	if o.FacebookSettings.Secret != nil && *o.FacebookSettings.Secret != "" {
+		*o.FacebookSettings.Secret = FAKE_SETTING
+	}
+
+	if o.LinkedInSettings.Secret != nil && *o.LinkedInSettings.Secret != "" {
+		*o.LinkedInSettings.Secret = FAKE_SETTING
+	}
+
+	if o.GitHubSettings.Secret != nil && *o.GitHubSettings.Secret != "" {
+		*o.GitHubSettings.Secret = FAKE_SETTING
+	}
+
+	if o.TwitterSettings.Secret != nil && *o.TwitterSettings.Secret != "" {
+		*o.TwitterSettings.Secret = FAKE_SETTING
 	}
 
 	if o.Office365Settings.Secret != nil && *o.Office365Settings.Secret != "" {

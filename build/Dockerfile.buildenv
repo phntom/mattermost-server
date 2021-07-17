@@ -1,37 +1,38 @@
 FROM golang:1.15.5 as builder
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
+WORKDIR /home
+RUN git clone https://github.com/mattermost/mattermost-server.git
+WORKDIR /home/mattermost-server
 
 ENV MM_NO_DOCKER="true"
 ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
-ENV BUILD_VERSION="5.36"
-ENV BUILD_NUMBER="5.36.2"
-ENV BUILD_DATE="Thu Jun 24 14:05:12 UTC 2021"
-ENV BUILD_HASH="c06c0b9b21d976d2344c1d27951f3574fb572b03"
-
-WORKDIR /home
-RUN git clone https://github.com/mattermost/mattermost-server.git
+ENV BUILD_VERSION="5.37"
+ENV BUILD_NUMBER="5.37.2"
+ENV BUILD_DATE="Thu Jul 22 08:36:37 UTC 2021"
+ENV BUILD_HASH="4e41f3497977867c73d1fa1cbe8a3dac898a0ec4"
 
 ENV BUILD_ENTERPRISE_READY="false"
-WORKDIR /home/mattermost-server
 RUN git pull
 RUN git checkout release-$BUILD_VERSION
 
-COPY services/telemetry/telemetry.go services/telemetry/telemetry.go
-COPY config/client.go config/client.go
+COPY api4/user.go api4/
 COPY app/server.go app/admin.go app/user.go app/oauth.go app/
+COPY config/client.go config/utils.go config/
+COPY model/config.go model/
 COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/
+COPY services/telemetry/telemetry.go services/telemetry/
 
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v5/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v5/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
 # docker build . -f build/Dockerfile.buildenv -t aaa
 # docker run -v $PWD/build/:/out aaa cp -v mattermost /out/
-# docker build build -f build/Dockerfile.release -t phntom/mattermost-team-edition:5.36.0
-# docker push phntom/mattermost-team-edition:5.36.0
+# docker build build -f build/Dockerfile.release -t phntom/mattermost-team-edition:5.37.0
+# docker push phntom/mattermost-team-edition:5.37.0
 
-FROM mattermost/mattermost-team-edition:5.36.1
+FROM mattermost/mattermost-team-edition:5.37.0
 RUN wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz && \
   wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz.sig && \
   wget -P prepackaged_plugins https://github.com/matterpoll/matterpoll/releases/download/v1.4.0/com.github.matterpoll.matterpoll-1.4.0.tar.gz && \
@@ -50,3 +51,5 @@ RUN wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-
 COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
+
+COPY dist/ client/
