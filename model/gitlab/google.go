@@ -17,6 +17,8 @@ import (
 )
 
 const (
+	SSOPreviousFirstName  = "PreviousFirstName"
+	SSOPreviousLastName   = "PreviousLastName"
 	PictureURL            = "PictureURL"
 	UserAuthServiceGoogle = "google"
 )
@@ -59,6 +61,8 @@ func userFromGoogleUser(gou *GoogleUser) *model.User {
 	user.Username = getRandomUsername(gou.Email)
 	user.FirstName = gou.GivenName
 	user.LastName = gou.FamilyName
+	user.SetProp(SSOPreviousFirstName, gou.GivenName)
+	user.SetProp(SSOPreviousLastName, gou.FamilyName)
 	user.Email = strings.ToLower(gou.Email)
 	user.EmailVerified = gou.EmailVerified
 	if model.IsValidLocale(gou.Locale) {

@@ -45,6 +45,8 @@ func userFromFacebookUser(fbu *FacebookUser) *model.User {
 	user.Username = getRandomUsername(fbu.Email)
 	user.FirstName = fbu.FirstName
 	user.LastName = fbu.LastName
+	user.SetProp(SSOPreviousFirstName, fbu.FirstName)
+	user.SetProp(SSOPreviousLastName, fbu.LastName)
 	user.Email = fbu.Email
 	if len(fbu.Picture.Data.Url) > 0 {
 		user.SetProp(PictureURL, fbu.Picture.Data.Url)
@@ -103,7 +105,7 @@ func (m *FacebookProvider) GetUserFromJson(data io.Reader, tokenUser *model.User
 func (m *FacebookProvider) GetSSOSettings(config *model.Config, service string) (*model.SSOSettings, error) {
 	if service == UserAuthServiceFacebook {
 		m.config = config
-		return &config.OpenIdSettings, nil
+		return &config.FacebookSettings, nil
 	}
 	return nil, errors.New("no match for requested service")
 }

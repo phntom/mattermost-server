@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	oauthgitlab "github.com/mattermost/mattermost-server/v5/model/gitlab"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -1798,17 +1799,24 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 
 	userAttrsChanged := false
 
-	if oauthUser.Username != user.Username {
-		if existingUser, _ := a.GetUserByUsername(oauthUser.Username); existingUser == nil {
-			user.Username = oauthUser.Username
-			userAttrsChanged = true
-		}
-	}
+	//if oauthUser.Username != user.Username {
+	//	if existingUser, _ := a.GetUserByUsername(oauthUser.Username); existingUser == nil {
+	//		user.Username = oauthUser.Username
+	//		userAttrsChanged = true
+	//	}
+	//}
 
 	if oauthUser.GetFullName() != user.GetFullName() {
-		user.FirstName = oauthUser.FirstName
-		user.LastName = oauthUser.LastName
-		userAttrsChanged = true
+		if prevFirstName, ok := user.GetProp(oauthgitlab.SSOPreviousFirstName); !ok || prevFirstName != oauthUser.FirstName {
+			user.FirstName = oauthUser.FirstName
+			user.SetProp(oauthgitlab.SSOPreviousFirstName, oauthUser.FirstName)
+			userAttrsChanged = true
+		}
+		if prevLastName, ok := user.GetProp(oauthgitlab.SSOPreviousLastName); !ok || prevLastName != oauthUser.LastName {
+			user.LastName = oauthUser.LastName
+			user.SetProp(oauthgitlab.SSOPreviousLastName, oauthUser.LastName)
+			userAttrsChanged = true
+		}
 	}
 
 	if oauthUser.Email != user.Email {
