@@ -20,6 +20,7 @@ const (
 	SSOPreviousFirstName  = "PreviousFirstName"
 	SSOPreviousLastName   = "PreviousLastName"
 	PictureURL            = "PictureURL"
+	BearerToken           = "BearerToken"
 	UserAuthServiceGoogle = "google"
 )
 

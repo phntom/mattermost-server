@@ -331,6 +331,13 @@ func (a *App) CreateOAuthUser(c *request.Context, service string, userData io.Re
 
 	user.EmailVerified = true
 
+	if picUrl, ok := user.GetProp(oauthgitlab.PictureURL); ok {
+		err := a.updateUserPicture(picUrl, user)
+		if err != nil {
+			return nil, model.NewAppError("CreateOAuthUser", "api.user.create_oauth_user.create.app_error", map[string]interface{}{"Service": service}, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
 	ruser, err := a.CreateUser(c, user)
 	if err != nil {
 		return nil, err
@@ -1815,7 +1822,7 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 		if prevLastName, ok := user.GetProp(oauthgitlab.SSOPreviousLastName); !ok || prevLastName != oauthUser.LastName {
 			user.LastName = oauthUser.LastName
 			user.SetProp(oauthgitlab.SSOPreviousLastName, oauthUser.LastName)
-			userAttrsChanged = true
+
 		}
 	}
 
@@ -1823,6 +1830,14 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 		if existingUser, _ := a.GetUserByEmail(oauthUser.Email); existingUser == nil {
 			user.Email = oauthUser.Email
 			userAttrsChanged = true
+		}
+	}
+
+	if picUrl, ok := oauthUser.GetProp(oauthgitlab.PictureURL); user.LastPictureUpdate == 0 && ok {
+		userAttrsChanged = true
+		err := a.updateUserPicture(picUrl, user)
+		if err != nil {
+			return model.NewAppError("UpdateOAuthUserAttrs", "app.user.update.finding.app_error", nil, err.Error(), http.StatusInternalServerError)
 		}
 	}
 
@@ -1851,6 +1866,31 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 		a.InvalidateCacheForUser(user.Id)
 	}
 
+	return nil
+}
+
+func (a *App) updateUserPicture(picUrl string, user *model.User) error {
+	client := http.Client{}
+	req, err := http.NewRequest("GET", picUrl, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode == 200 {
+		defer resp.Body.Close()
+
+		path := "users/" + user.Id + "/profile.png"
+		if _, err := a.WriteFile(resp.Body, path); err != nil {
+			return err
+		}
+
+		if err := a.Srv().Store.User().UpdateLastPictureUpdate(user.Id); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
