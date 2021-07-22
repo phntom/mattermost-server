@@ -733,7 +733,11 @@ func (u *User) IsOAuthUser() bool {
 	return u.AuthService == SERVICE_GITLAB ||
 		u.AuthService == SERVICE_GOOGLE ||
 		u.AuthService == SERVICE_OFFICE365 ||
-		u.AuthService == SERVICE_OPENID
+		u.AuthService == SERVICE_OPENID ||
+		u.AuthService == SERVICE_FACEBOOK ||
+		u.AuthService == SERVICE_LINKEDIN ||
+		u.AuthService == SERVICE_TWITTER ||
+		u.AuthService == SERVICE_GITHUB
 }
 
 func (u *User) IsLDAPUser() bool {

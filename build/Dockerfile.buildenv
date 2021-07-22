@@ -11,7 +11,7 @@ ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="5.37"
 ENV BUILD_NUMBER="5.37.2"
-ENV BUILD_DATE="Thu Jul 22 08:36:37 UTC 2021"
+ENV BUILD_DATE="Thu Jul 22 17:16:05 UTC 2021"
 ENV BUILD_HASH="4e41f3497977867c73d1fa1cbe8a3dac898a0ec4"
 
 ENV BUILD_ENTERPRISE_READY="false"
@@ -21,8 +21,8 @@ RUN git checkout release-$BUILD_VERSION
 COPY api4/user.go api4/
 COPY app/server.go app/admin.go app/user.go app/oauth.go app/
 COPY config/client.go config/utils.go config/
-COPY model/config.go model/
-COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/
+COPY model/config.go model/switch_request.go model/
+COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/linkedin.go model/gitlab/
 COPY services/telemetry/telemetry.go services/telemetry/
 
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v5/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v5/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
@@ -48,8 +48,8 @@ RUN wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-
 #ENV PATH=/mattermost/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mattermost/go/bin/
 #CMD dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /mattermost/bin/mattermost
 
+COPY dist/ client/
+
 COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
-
-COPY dist/ client/
