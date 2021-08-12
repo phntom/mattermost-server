@@ -331,16 +331,14 @@ func (a *App) CreateOAuthUser(c *request.Context, service string, userData io.Re
 
 	user.EmailVerified = true
 
-	if picUrl, ok := user.GetProp(oauthgitlab.PictureURL); ok {
-		err := a.updateUserPicture(picUrl, user)
-		if err != nil {
-			return nil, model.NewAppError("CreateOAuthUser", "api.user.create_oauth_user.create.app_error", map[string]interface{}{"Service": service}, err.Error(), http.StatusInternalServerError)
-		}
-	}
-
 	ruser, err := a.CreateUser(c, user)
 	if err != nil {
 		return nil, err
+	}
+
+	appError, _ := a.updateUserPicture(user)
+	if appError != nil {
+		return nil, model.NewAppError("CreateOAuthUser", "api.user.create_oauth_user.create.app_error", map[string]interface{}{"Service": service}, appError.Error(), http.StatusInternalServerError)
 	}
 
 	if teamID != "" {
@@ -1833,12 +1831,14 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 		}
 	}
 
-	if picUrl, ok := oauthUser.GetProp(oauthgitlab.PictureURL); user.LastPictureUpdate == 0 && ok {
-		userAttrsChanged = true
-		err := a.updateUserPicture(picUrl, user)
+	oauthPicUrl, okOauthPicUrl := oauthUser.GetProp(oauthgitlab.PictureURL)
+	userPicUrl, okUserPicUrl := user.GetProp(oauthgitlab.PictureURL)
+	if okOauthPicUrl && okUserPicUrl && oauthPicUrl != userPicUrl {
+		err, pictureChanged := a.updateUserPicture(user)
 		if err != nil {
 			return model.NewAppError("UpdateOAuthUserAttrs", "app.user.update.finding.app_error", nil, err.Error(), http.StatusInternalServerError)
 		}
+		userAttrsChanged = userAttrsChanged || pictureChanged
 	}
 
 	if user.DeleteAt > 0 {
@@ -1869,29 +1869,33 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 	return nil
 }
 
-func (a *App) updateUserPicture(picUrl string, user *model.User) error {
+func (a *App) updateUserPicture(user *model.User) (error, bool) {
+	picUrl, ok := user.GetProp(oauthgitlab.PictureURL)
+	if !ok {
+		return nil, false
+	}
 	client := http.Client{}
 	req, err := http.NewRequest("GET", picUrl, nil)
 	if err != nil {
-		return err
+		return err, false
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return err, false
 	}
 	if resp.StatusCode == 200 {
 		defer resp.Body.Close()
 
 		path := "users/" + user.Id + "/profile.png"
 		if _, err := a.WriteFile(resp.Body, path); err != nil {
-			return err
+			return err, false
 		}
 
 		if err := a.Srv().Store.User().UpdateLastPictureUpdate(user.Id); err != nil {
-			return err
+			return err, false
 		}
 	}
-	return nil
+	return nil, true
 }
 
 func (a *App) RestrictUsersGetByPermissions(userID string, options *model.UserGetOptions) (*model.UserGetOptions, *model.AppError) {
