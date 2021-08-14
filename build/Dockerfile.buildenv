@@ -1,4 +1,4 @@
-FROM golang:1.15.5 as builder
+FROM golang:1.15.15 as builder
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
 WORKDIR /home
@@ -9,10 +9,10 @@ ENV MM_NO_DOCKER="true"
 ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
-ENV BUILD_VERSION="5.37"
-ENV BUILD_NUMBER="5.37.3"
-ENV BUILD_DATE="Thu Aug 12 08:58:26 UTC 2021"
-ENV BUILD_HASH="d901c643fb3929a92fa3d7e61cc0526589c141de"
+ENV BUILD_VERSION="5.38"
+ENV BUILD_NUMBER="5.38.0"
+ENV BUILD_DATE="Sat Aug 14 15:46:57 UTC 2021"
+ENV BUILD_HASH="c93871c86595c6a72cfcb69b1a8522c24a36b780"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -32,14 +32,12 @@ RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-serve
 # docker build build -f build/Dockerfile.release -t phntom/mattermost-team-edition:5.37.0
 # docker push phntom/mattermost-team-edition:5.37.0
 
-FROM mattermost/mattermost-team-edition:5.37.0
+FROM mattermost/mattermost-team-edition:5.37.1
 RUN wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz && \
   wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz.sig && \
   wget -P prepackaged_plugins https://github.com/matterpoll/matterpoll/releases/download/v1.4.0/com.github.matterpoll.matterpoll-1.4.0.tar.gz && \
   wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz && \
-  wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz.sig && \
-  sed -i'' 's/this.props.isLicensed&&//g' client/810.*.js && \
-  sed -i'' 's#"/openid/signup"#"/facebook/signup"#g' client/810.*.js
+  wget -P prepackaged_plugins https://github.com/mattermost/mattermost-plugin-agenda/releases/download/v0.2.2/com.mattermost.agenda-0.2.2.tar.gz.sig
 
 #USER 0
 #RUN apk add --no-cache git make musl-dev go libc6-compat
@@ -53,3 +51,5 @@ COPY dist/ client/
 COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
+
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:5.38.0-pre1
