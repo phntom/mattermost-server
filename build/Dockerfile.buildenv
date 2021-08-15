@@ -1,4 +1,4 @@
-FROM golang:1.15.15 as builder
+FROM golang:1.16.6 as builder
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
 WORKDIR /home
@@ -19,11 +19,12 @@ RUN git pull
 RUN git checkout release-$BUILD_VERSION
 
 COPY api4/user.go api4/
-COPY app/server.go app/admin.go app/user.go app/oauth.go app/
+COPY app/server.go app/admin.go app/user.go app/oauth.go app/email_batching.go app/
 COPY config/client.go config/utils.go config/
 COPY model/config.go model/switch_request.go model/
 COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/linkedin.go model/gitlab/
 COPY services/telemetry/telemetry.go services/telemetry/
+COPY i18n/en.json i18n/en_AU.json i18n/
 
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v5/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v5/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v5/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
@@ -52,4 +53,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
 
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:5.38.0-pre1
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:5.38.0-pre6
