@@ -276,8 +276,9 @@ func (es *EmailService) sendBatchedEmailNotification(userID string, notification
 
 	data := es.newEmailTemplateData(user.Locale)
 	data.Props["SiteURL"] = siteURL
-	data.Props["Title"] = translateFunc("api.email_batching.send_batched_email_notification.title", len(notifications)-1, map[string]interface{}{
-		"SenderName": firstSender.GetDisplayName(displayNameFormat),
+	data.Props["Title"] = translateFunc("api.email_batching.send_batched_email_notification.title", len(notifications), map[string]interface{}{
+		"SenderName":    firstSender.GetDisplayName(displayNameFormat),
+		"CountMinusOne": strconv.Itoa(len(notifications) - 1),
 	})
 	data.Props["SubTitle"] = translateFunc("api.email_batching.send_batched_email_notification.subTitle")
 	data.Props["Button"] = translateFunc("api.email_batching.send_batched_email_notification.button")
