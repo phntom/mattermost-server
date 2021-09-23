@@ -1553,6 +1553,7 @@ type EmailSettings struct {
 	ConnectionSecurity                *string `access:"environment_smtp,write_restrictable,cloud_restrictable"`
 	SendPushNotifications             *bool   `access:"environment_push_notification_server"`
 	PushNotificationServer            *string `access:"environment_push_notification_server"` // telemetry: none
+	PushNotificationServerCustom      *string `access:"environment_push_notification_server"` // telemetry: none
 	PushNotificationContents          *string `access:"site_notifications"`
 	PushNotificationBuffer            *int    // telemetry: none
 	EnableEmailBatching               *bool   `access:"site_notifications"`
@@ -1644,6 +1645,14 @@ func (s *EmailSettings) SetDefaults(isUpdate bool) {
 	}
 
 	if s.PushNotificationServer == nil {
+		if isUpdate {
+			s.PushNotificationServer = NewString("")
+		} else {
+			s.PushNotificationServer = NewString(GENERIC_NOTIFICATION_SERVER)
+		}
+	}
+
+	if s.PushNotificationServerCustom == nil {
 		if isUpdate {
 			s.PushNotificationServer = NewString("")
 		} else {

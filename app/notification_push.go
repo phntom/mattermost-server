@@ -355,15 +355,21 @@ func (s *Server) StopPushNotificationsHubWorkers() {
 func (a *App) sendToPushProxy(msg *model.PushNotification, session *model.Session) error {
 	msg.ServerId = a.TelemetryId()
 
+	serverPrefix := *a.Config().EmailSettings.PushNotificationServer
+	if strings.Contains(msg.Platform, "custom") {
+		serverPrefix = *a.Config().EmailSettings.PushNotificationServerCustom
+	}
+
 	a.NotificationsLog().Info("Notification will be sent",
 		mlog.String("ackId", msg.AckId),
 		mlog.String("type", msg.Type),
 		mlog.String("userId", session.UserId),
 		mlog.String("postId", msg.PostId),
 		mlog.String("status", model.PUSH_SEND_PREPARE),
+		mlog.String("server", serverPrefix),
 	)
 
-	url := strings.TrimRight(*a.Config().EmailSettings.PushNotificationServer, "/") + model.API_URL_SUFFIX_V1 + "/send_push"
+	url := strings.TrimRight(serverPrefix, "/") + model.API_URL_SUFFIX_V1 + "/send_push"
 	request, err := http.NewRequest("POST", url, strings.NewReader(msg.ToJson()))
 	if err != nil {
 		return err
