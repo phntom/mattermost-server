@@ -10,8 +10,8 @@ ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="5.39"
-ENV BUILD_NUMBER="5.39.0"
-ENV BUILD_DATE="Thu Sep 23 15:41:31 UTC 2021"
+ENV BUILD_NUMBER="5.39.1"
+ENV BUILD_DATE="Thu Oct 14 12:29:20 UTC 2021"
 ENV BUILD_HASH="08f32a8c6d9b7ea2a4920ba9d032b7141933e641"
 
 ENV BUILD_ENTERPRISE_READY="false"
@@ -53,4 +53,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
 
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:5.39.0
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:5.39.1
