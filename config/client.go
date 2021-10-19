@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 // GenerateClientConfig renders the given configuration for a client.
@@ -18,7 +18,6 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 	props["EnableCustomUserStatuses"] = strconv.FormatBool(*c.TeamSettings.EnableCustomUserStatuses)
 	props["EnableUserDeactivation"] = strconv.FormatBool(*c.TeamSettings.EnableUserDeactivation)
 	props["RestrictDirectMessage"] = *c.TeamSettings.RestrictDirectMessage
-	props["EnableXToLeaveChannelsFromLHS"] = strconv.FormatBool(*c.TeamSettings.EnableXToLeaveChannelsFromLHS)
 	props["TeammateNameDisplay"] = *c.TeamSettings.TeammateNameDisplay
 	props["LockTeammateNameDisplay"] = strconv.FormatBool(*c.TeamSettings.LockTeammateNameDisplay)
 	props["ExperimentalPrimaryTeam"] = *c.TeamSettings.ExperimentalPrimaryTeam
@@ -34,13 +33,14 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 	props["EnablePostIconOverride"] = strconv.FormatBool(*c.ServiceSettings.EnablePostIconOverride)
 	props["EnableUserAccessTokens"] = strconv.FormatBool(*c.ServiceSettings.EnableUserAccessTokens)
 	props["EnableLinkPreviews"] = strconv.FormatBool(*c.ServiceSettings.EnableLinkPreviews)
+	props["EnablePermalinkPreviews"] = strconv.FormatBool(*c.ServiceSettings.EnablePermalinkPreviews)
 	props["EnableTesting"] = strconv.FormatBool(*c.ServiceSettings.EnableTesting)
 	props["EnableDeveloper"] = strconv.FormatBool(*c.ServiceSettings.EnableDeveloper)
 	props["PostEditTimeLimit"] = fmt.Sprintf("%v", *c.ServiceSettings.PostEditTimeLimit)
 	props["MinimumHashtagLength"] = fmt.Sprintf("%v", *c.ServiceSettings.MinimumHashtagLength)
-	props["CloseUnusedDirectMessages"] = strconv.FormatBool(*c.ServiceSettings.CloseUnusedDirectMessages)
 	props["EnablePreviewFeatures"] = strconv.FormatBool(*c.ServiceSettings.EnablePreviewFeatures)
 	props["EnableTutorial"] = strconv.FormatBool(*c.ServiceSettings.EnableTutorial)
+	props["EnableOnboardingFlow"] = strconv.FormatBool(*c.ServiceSettings.EnableOnboardingFlow)
 	props["ExperimentalEnableDefaultChannelLeaveJoinMessages"] = strconv.FormatBool(*c.ServiceSettings.ExperimentalEnableDefaultChannelLeaveJoinMessages)
 	props["ExperimentalGroupUnreadChannels"] = *c.ServiceSettings.ExperimentalGroupUnreadChannels
 	props["EnableSVGs"] = strconv.FormatBool(*c.ServiceSettings.EnableSVGs)
@@ -55,11 +55,6 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 
 	props["ExperimentalCloudUserLimit"] = strconv.FormatInt(*c.ExperimentalSettings.CloudUserLimit, 10)
 	props["ExperimentalCloudBilling"] = strconv.FormatBool(*c.ExperimentalSettings.CloudBilling)
-	if *c.ServiceSettings.ExperimentalChannelOrganization || *c.ServiceSettings.ExperimentalGroupUnreadChannels != model.GROUP_UNREAD_CHANNELS_DISABLED {
-		props["ExperimentalChannelOrganization"] = strconv.FormatBool(true)
-	} else {
-		props["ExperimentalChannelOrganization"] = strconv.FormatBool(false)
-	}
 
 	props["ExperimentalEnableAutomaticReplies"] = strconv.FormatBool(*c.TeamSettings.ExperimentalEnableAutomaticReplies)
 	props["ExperimentalTimezone"] = strconv.FormatBool(*c.DisplaySettings.ExperimentalTimezone)
@@ -82,8 +77,8 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 
 	props["EnableEmojiPicker"] = strconv.FormatBool(*c.ServiceSettings.EnableEmojiPicker)
 	props["EnableGifPicker"] = strconv.FormatBool(*c.ServiceSettings.EnableGifPicker)
-	props["GfycatApiKey"] = *c.ServiceSettings.GfycatApiKey
-	props["GfycatApiSecret"] = *c.ServiceSettings.GfycatApiSecret
+	props["GfycatApiKey"] = *c.ServiceSettings.GfycatAPIKey
+	props["GfycatApiSecret"] = *c.ServiceSettings.GfycatAPISecret
 	props["MaxFileSize"] = strconv.FormatInt(*c.FileSettings.MaxFileSize, 10)
 
 	props["MaxNotificationsPerChannel"] = strconv.FormatInt(*c.TeamSettings.MaxNotificationsPerChannel, 10)
@@ -98,13 +93,9 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 
 	props["CloudUserLimit"] = strconv.FormatInt(*c.ExperimentalSettings.CloudUserLimit, 10)
 
-	props["EnableLegacySidebar"] = strconv.FormatBool(*c.ServiceSettings.EnableLegacySidebar)
-
 	props["EnableReliableWebSockets"] = strconv.FormatBool(*c.ServiceSettings.EnableReliableWebSockets)
 
 	// Set default values for all options that require a license.
-	props["ExperimentalHideTownSquareinLHS"] = "false"
-	props["ExperimentalTownSquareIsReadOnly"] = "false"
 	props["ExperimentalEnableAuthenticationTransfer"] = "true"
 	props["LdapNicknameAttributeSet"] = "false"
 	props["LdapFirstNameAttributeSet"] = "false"
@@ -135,58 +126,79 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 	props["DataRetentionFileRetentionDays"] = "0"
 	props["CWSUrl"] = ""
 
-	props["CustomUrlSchemes"] = strings.Join(c.DisplaySettings.CustomUrlSchemes, ",")
-	props["IsDefaultMarketplace"] = strconv.FormatBool(*c.PluginSettings.MarketplaceUrl == model.PLUGIN_SETTINGS_DEFAULT_MARKETPLACE_URL)
+	props["CustomUrlSchemes"] = strings.Join(c.DisplaySettings.CustomURLSchemes, ",")
+	props["IsDefaultMarketplace"] = strconv.FormatBool(*c.PluginSettings.MarketplaceURL == model.PluginSettingsDefaultMarketplaceURL)
 	props["ExperimentalSharedChannels"] = "false"
 	props["CollapsedThreads"] = *c.ServiceSettings.CollapsedThreads
 
-	props["ExperimentalHideTownSquareinLHS"] = strconv.FormatBool(*c.TeamSettings.ExperimentalHideTownSquareinLHS)
-	props["ExperimentalTownSquareIsReadOnly"] = strconv.FormatBool(*c.TeamSettings.ExperimentalTownSquareIsReadOnly)
-	props["ExperimentalEnableAuthenticationTransfer"] = strconv.FormatBool(*c.ServiceSettings.ExperimentalEnableAuthenticationTransfer)
+	if license != nil {
+		props["ExperimentalEnableAuthenticationTransfer"] = strconv.FormatBool(*c.ServiceSettings.ExperimentalEnableAuthenticationTransfer)
 
-	props["LdapNicknameAttributeSet"] = strconv.FormatBool(*c.LdapSettings.NicknameAttribute != "")
-	props["LdapFirstNameAttributeSet"] = strconv.FormatBool(*c.LdapSettings.FirstNameAttribute != "")
-	props["LdapLastNameAttributeSet"] = strconv.FormatBool(*c.LdapSettings.LastNameAttribute != "")
-	props["LdapPictureAttributeSet"] = strconv.FormatBool(*c.LdapSettings.PictureAttribute != "")
-	props["LdapPositionAttributeSet"] = strconv.FormatBool(*c.LdapSettings.PositionAttribute != "")
+		if *license.Features.LDAP {
+			props["LdapNicknameAttributeSet"] = strconv.FormatBool(*c.LdapSettings.NicknameAttribute != "")
+			props["LdapFirstNameAttributeSet"] = strconv.FormatBool(*c.LdapSettings.FirstNameAttribute != "")
+			props["LdapLastNameAttributeSet"] = strconv.FormatBool(*c.LdapSettings.LastNameAttribute != "")
+			props["LdapPictureAttributeSet"] = strconv.FormatBool(*c.LdapSettings.PictureAttribute != "")
+			props["LdapPositionAttributeSet"] = strconv.FormatBool(*c.LdapSettings.PositionAttribute != "")
+		}
 
-	props["EnableCompliance"] = strconv.FormatBool(*c.ComplianceSettings.Enable)
-	props["EnableMobileFileDownload"] = strconv.FormatBool(*c.FileSettings.EnableMobileDownload)
-	props["EnableMobileFileUpload"] = strconv.FormatBool(*c.FileSettings.EnableMobileUpload)
+		if *license.Features.Compliance {
+			props["EnableCompliance"] = strconv.FormatBool(*c.ComplianceSettings.Enable)
+			props["EnableMobileFileDownload"] = strconv.FormatBool(*c.FileSettings.EnableMobileDownload)
+			props["EnableMobileFileUpload"] = strconv.FormatBool(*c.FileSettings.EnableMobileUpload)
+		}
 
-	props["SamlFirstNameAttributeSet"] = strconv.FormatBool(*c.SamlSettings.FirstNameAttribute != "")
-	props["SamlLastNameAttributeSet"] = strconv.FormatBool(*c.SamlSettings.LastNameAttribute != "")
-	props["SamlNicknameAttributeSet"] = strconv.FormatBool(*c.SamlSettings.NicknameAttribute != "")
-	props["SamlPositionAttributeSet"] = strconv.FormatBool(*c.SamlSettings.PositionAttribute != "")
+		if *license.Features.SAML {
+			props["SamlFirstNameAttributeSet"] = strconv.FormatBool(*c.SamlSettings.FirstNameAttribute != "")
+			props["SamlLastNameAttributeSet"] = strconv.FormatBool(*c.SamlSettings.LastNameAttribute != "")
+			props["SamlNicknameAttributeSet"] = strconv.FormatBool(*c.SamlSettings.NicknameAttribute != "")
+			props["SamlPositionAttributeSet"] = strconv.FormatBool(*c.SamlSettings.PositionAttribute != "")
+		}
 
-	// do this under the correct licensed feature
-	props["ExperimentalClientSideCertEnable"] = strconv.FormatBool(*c.ExperimentalSettings.ClientSideCertEnable)
-	props["ExperimentalClientSideCertCheck"] = *c.ExperimentalSettings.ClientSideCertCheck
+		if *license.Features.FutureFeatures {
+			props["ExperimentalClientSideCertEnable"] = strconv.FormatBool(*c.ExperimentalSettings.ClientSideCertEnable)
+			props["ExperimentalClientSideCertCheck"] = *c.ExperimentalSettings.ClientSideCertCheck
+		}
 
-	props["EnableCluster"] = strconv.FormatBool(*c.ClusterSettings.Enable)
+		if *license.Features.Cluster {
+			props["EnableCluster"] = strconv.FormatBool(*c.ClusterSettings.Enable)
+		}
 
-	props["EnableMetrics"] = strconv.FormatBool(*c.MetricsSettings.Enable)
+		if *license.Features.Cluster {
+			props["EnableMetrics"] = strconv.FormatBool(*c.MetricsSettings.Enable)
+		}
 
-	props["EnableBanner"] = strconv.FormatBool(*c.AnnouncementSettings.EnableBanner)
-	props["BannerText"] = *c.AnnouncementSettings.BannerText
-	props["BannerColor"] = *c.AnnouncementSettings.BannerColor
-	props["BannerTextColor"] = *c.AnnouncementSettings.BannerTextColor
-	props["AllowBannerDismissal"] = strconv.FormatBool(*c.AnnouncementSettings.AllowBannerDismissal)
+		if *license.Features.Announcement {
+			props["EnableBanner"] = strconv.FormatBool(*c.AnnouncementSettings.EnableBanner)
+			props["BannerText"] = *c.AnnouncementSettings.BannerText
+			props["BannerColor"] = *c.AnnouncementSettings.BannerColor
+			props["BannerTextColor"] = *c.AnnouncementSettings.BannerTextColor
+			props["AllowBannerDismissal"] = strconv.FormatBool(*c.AnnouncementSettings.AllowBannerDismissal)
+		}
 
-	props["EnableThemeSelection"] = strconv.FormatBool(*c.ThemeSettings.EnableThemeSelection)
-	props["DefaultTheme"] = *c.ThemeSettings.DefaultTheme
-	props["AllowCustomThemes"] = strconv.FormatBool(*c.ThemeSettings.AllowCustomThemes)
-	props["AllowedThemes"] = strings.Join(c.ThemeSettings.AllowedThemes, ",")
+		if *license.Features.ThemeManagement {
+			props["EnableThemeSelection"] = strconv.FormatBool(*c.ThemeSettings.EnableThemeSelection)
+			props["DefaultTheme"] = *c.ThemeSettings.DefaultTheme
+			props["AllowCustomThemes"] = strconv.FormatBool(*c.ThemeSettings.AllowCustomThemes)
+			props["AllowedThemes"] = strings.Join(c.ThemeSettings.AllowedThemes, ",")
+		}
 
-	props["DataRetentionEnableMessageDeletion"] = strconv.FormatBool(*c.DataRetentionSettings.EnableMessageDeletion)
-	props["DataRetentionMessageRetentionDays"] = strconv.FormatInt(int64(*c.DataRetentionSettings.MessageRetentionDays), 10)
-	props["DataRetentionEnableFileDeletion"] = strconv.FormatBool(*c.DataRetentionSettings.EnableFileDeletion)
-	props["DataRetentionFileRetentionDays"] = strconv.FormatInt(int64(*c.DataRetentionSettings.FileRetentionDays), 10)
+		if *license.Features.DataRetention {
+			props["DataRetentionEnableMessageDeletion"] = strconv.FormatBool(*c.DataRetentionSettings.EnableMessageDeletion)
+			props["DataRetentionMessageRetentionDays"] = strconv.FormatInt(int64(*c.DataRetentionSettings.MessageRetentionDays), 10)
+			props["DataRetentionEnableFileDeletion"] = strconv.FormatBool(*c.DataRetentionSettings.EnableFileDeletion)
+			props["DataRetentionFileRetentionDays"] = strconv.FormatInt(int64(*c.DataRetentionSettings.FileRetentionDays), 10)
+		}
 
-	props["CWSUrl"] = *c.CloudSettings.CWSUrl
+		if *license.Features.Cloud {
+			props["CWSUrl"] = *c.CloudSettings.CWSURL
+		}
 
-	props["ExperimentalSharedChannels"] = strconv.FormatBool(*c.ExperimentalSettings.EnableSharedChannels)
-	props["ExperimentalRemoteClusterService"] = strconv.FormatBool(c.FeatureFlags.EnableRemoteClusterService && *c.ExperimentalSettings.EnableRemoteClusterService)
+		if *license.Features.SharedChannels {
+			props["ExperimentalSharedChannels"] = strconv.FormatBool(*c.ExperimentalSettings.EnableSharedChannels)
+			props["ExperimentalRemoteClusterService"] = strconv.FormatBool(c.FeatureFlags.EnableRemoteClusterService && *c.ExperimentalSettings.EnableRemoteClusterService)
+		}
+	}
 
 	return props
 }
@@ -232,6 +244,8 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 	props["EmailLoginButtonTextColor"] = *c.EmailSettings.LoginButtonTextColor
 
 	props["EnableSignUpWithGitLab"] = strconv.FormatBool(*c.GitLabSettings.Enable)
+	props["GitLabButtonColor"] = *c.GitLabSettings.ButtonColor
+	props["GitLabButtonText"] = *c.GitLabSettings.ButtonText
 
 	props["TermsOfServiceLink"] = *c.SupportSettings.TermsOfServiceLink
 	props["PrivacyPolicyLink"] = *c.SupportSettings.PrivacyPolicyLink
@@ -278,7 +292,6 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 	props["SamlLoginButtonTextColor"] = ""
 	props["EnableSignUpWithGoogle"] = "false"
 	props["EnableSignUpWithOffice365"] = "false"
-	props["EnableSignUpWithFacebook"] = "false"
 	props["EnableSignUpWithOpenId"] = "false"
 	props["OpenIdButtonText"] = ""
 	props["OpenIdButtonColor"] = ""
@@ -291,34 +304,46 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 	props["EnableGuestAccounts"] = strconv.FormatBool(*c.GuestAccountsSettings.Enable)
 	props["GuestAccountsEnforceMultifactorAuthentication"] = strconv.FormatBool(*c.GuestAccountsSettings.EnforceMultifactorAuthentication)
 
-	props["EnableLdap"] = strconv.FormatBool(*c.LdapSettings.Enable)
-	props["LdapLoginFieldName"] = *c.LdapSettings.LoginFieldName
-	props["LdapLoginButtonColor"] = *c.LdapSettings.LoginButtonColor
-	props["LdapLoginButtonBorderColor"] = *c.LdapSettings.LoginButtonBorderColor
-	props["LdapLoginButtonTextColor"] = *c.LdapSettings.LoginButtonTextColor
+	if license != nil {
+		if *license.Features.LDAP {
+			props["EnableLdap"] = strconv.FormatBool(*c.LdapSettings.Enable)
+			props["LdapLoginFieldName"] = *c.LdapSettings.LoginFieldName
+			props["LdapLoginButtonColor"] = *c.LdapSettings.LoginButtonColor
+			props["LdapLoginButtonBorderColor"] = *c.LdapSettings.LoginButtonBorderColor
+			props["LdapLoginButtonTextColor"] = *c.LdapSettings.LoginButtonTextColor
+		}
 
-	props["EnableSaml"] = strconv.FormatBool(*c.SamlSettings.Enable)
-	props["SamlLoginButtonText"] = *c.SamlSettings.LoginButtonText
-	props["SamlLoginButtonColor"] = *c.SamlSettings.LoginButtonColor
-	props["SamlLoginButtonBorderColor"] = *c.SamlSettings.LoginButtonBorderColor
-	props["SamlLoginButtonTextColor"] = *c.SamlSettings.LoginButtonTextColor
+		if *license.Features.SAML {
+			props["EnableSaml"] = strconv.FormatBool(*c.SamlSettings.Enable)
+			props["SamlLoginButtonText"] = *c.SamlSettings.LoginButtonText
+			props["SamlLoginButtonColor"] = *c.SamlSettings.LoginButtonColor
+			props["SamlLoginButtonBorderColor"] = *c.SamlSettings.LoginButtonBorderColor
+			props["SamlLoginButtonTextColor"] = *c.SamlSettings.LoginButtonTextColor
+		}
 
-	props["EnableSignUpWithGoogle"] = strconv.FormatBool(*c.GoogleSettings.Enable)
+		if *license.Features.GoogleOAuth {
+			props["EnableSignUpWithGoogle"] = strconv.FormatBool(*c.GoogleSettings.Enable)
+		}
 
-	props["EnableSignUpWithOffice365"] = strconv.FormatBool(*c.Office365Settings.Enable)
+		if *license.Features.Office365OAuth {
+			props["EnableSignUpWithOffice365"] = strconv.FormatBool(*c.Office365Settings.Enable)
+		}
 
-	props["EnableSignUpWithFacebook"] = strconv.FormatBool(*c.FacebookSettings.Enable)
-	props["EnableSignUpWithLinkedIn"] = strconv.FormatBool(*c.LinkedInSettings.Enable)
-	props["EnableSignUpWithGitHub"] = strconv.FormatBool(*c.GitHubSettings.Enable)
-	props["EnableSignUpWithTwitter"] = strconv.FormatBool(*c.TwitterSettings.Enable)
+		if *license.Features.OpenId {
+			props["EnableSignUpWithOpenId"] = strconv.FormatBool(*c.OpenIdSettings.Enable)
+			props["OpenIdButtonColor"] = *c.OpenIdSettings.ButtonColor
+			props["OpenIdButtonText"] = *c.OpenIdSettings.ButtonText
+		}
 
-	props["OpenIdButtonColor"] = *c.OpenIdSettings.ButtonColor
-	props["OpenIdButtonText"] = *c.OpenIdSettings.ButtonText
+		if *license.Features.CustomTermsOfService {
+			props["EnableCustomTermsOfService"] = strconv.FormatBool(*c.SupportSettings.CustomTermsOfServiceEnabled)
+			props["CustomTermsOfServiceReAcceptancePeriod"] = strconv.FormatInt(int64(*c.SupportSettings.CustomTermsOfServiceReAcceptancePeriod), 10)
+		}
 
-	props["EnableCustomTermsOfService"] = strconv.FormatBool(*c.SupportSettings.CustomTermsOfServiceEnabled)
-	props["CustomTermsOfServiceReAcceptancePeriod"] = strconv.FormatInt(int64(*c.SupportSettings.CustomTermsOfServiceReAcceptancePeriod), 10)
-
-	props["EnforceMultifactorAuthentication"] = strconv.FormatBool(*c.ServiceSettings.EnforceMultifactorAuthentication)
+		if *license.Features.MFA {
+			props["EnforceMultifactorAuthentication"] = strconv.FormatBool(*c.ServiceSettings.EnforceMultifactorAuthentication)
+		}
+	}
 
 	for key, value := range c.FeatureFlags.ToMap() {
 		props["FeatureFlag"+key] = value
