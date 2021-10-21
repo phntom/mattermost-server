@@ -7,13 +7,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mattermost/mattermost-server/v5/shared/mlog"
+	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"hash/fnv"
 	"io"
 	"strings"
 
-	"github.com/mattermost/mattermost-server/v5/einterfaces"
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/einterfaces"
+	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 const (
@@ -41,7 +41,7 @@ type GoogleUser struct {
 func init() {
 	mlog.Info("Google provider is initialized")
 	provider := &GoogleProvider{}
-	einterfaces.RegisterOauthProvider(UserAuthServiceGoogle, provider)
+	einterfaces.RegisterOAuthProvider(UserAuthServiceGoogle, provider)
 }
 
 func getRandomUsername(email string) string {
@@ -117,7 +117,7 @@ func (gou *GoogleUser) getAuthData() string {
 	return gou.Sub
 }
 
-func (m *GoogleProvider) GetUserFromJson(data io.Reader, tokenUser *model.User) (*model.User, error) {
+func (m *GoogleProvider) GetUserFromJSON(data io.Reader, tokenUser *model.User) (*model.User, error) {
 	gou, err := googleUserFromJson(data)
 	if err != nil {
 		return nil, err

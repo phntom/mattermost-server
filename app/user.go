@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	oauthgitlab "github.com/mattermost/mattermost-server/v5/model/gitlab"
+	oauthgitlab "github.com/mattermost/mattermost-server/v6/model/gitlab"
 	"io"
 	"mime/multipart"
 	"net/http"

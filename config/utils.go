@@ -46,6 +46,22 @@ func desanitize(actual, target *model.Config) {
 		target.GoogleSettings.Secret = actual.GoogleSettings.Secret
 	}
 
+	if target.FacebookSettings.Secret != nil && *target.FacebookSettings.Secret == model.FakeSetting {
+		target.FacebookSettings.Secret = actual.FacebookSettings.Secret
+	}
+
+	if target.LinkedInSettings.Secret != nil && *target.LinkedInSettings.Secret == model.FakeSetting {
+		target.LinkedInSettings.Secret = actual.LinkedInSettings.Secret
+	}
+
+	if target.GitHubSettings.Secret != nil && *target.GitHubSettings.Secret == model.FakeSetting {
+		target.GitHubSettings.Secret = actual.GitHubSettings.Secret
+	}
+
+	if target.TwitterSettings.Secret != nil && *target.TwitterSettings.Secret == model.FakeSetting {
+		target.TwitterSettings.Secret = actual.TwitterSettings.Secret
+	}
+
 	if target.Office365Settings.Secret != nil && *target.Office365Settings.Secret == model.FakeSetting {
 		target.Office365Settings.Secret = actual.Office365Settings.Secret
 	}

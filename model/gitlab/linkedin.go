@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mattermost/mattermost-server/v5/einterfaces"
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/shared/mlog"
+	"github.com/mattermost/mattermost-server/v6/einterfaces"
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -73,7 +73,7 @@ type LinkedInHandleEmail struct {
 func init() {
 	mlog.Info("LinkedIn provider is initialized")
 	provider := &LinkedInProvider{}
-	einterfaces.RegisterOauthProvider(UserAuthServiceLinkedIn, provider)
+	einterfaces.RegisterOAuthProvider(UserAuthServiceLinkedIn, provider)
 }
 
 func userFromLinkedInUser(liu *LinkedInUser) *model.User {
@@ -126,7 +126,7 @@ func (liu *LinkedInUser) IsValid() error {
 	return nil
 }
 
-func (m *LinkedInProvider) GetUserFromJson(data io.Reader, tokenUser *model.User) (*model.User, error) {
+func (m *LinkedInProvider) GetUserFromJSON(data io.Reader, tokenUser *model.User) (*model.User, error) {
 	liu, err := linkedinUserFromJson(data)
 	if err != nil {
 		return nil, err

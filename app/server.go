@@ -592,8 +592,7 @@ func NewServer(options ...Option) (*Server, error) {
 
 	s.ReloadConfig()
 
-	license := s.License()
-	allowAdvancedLogging := license != nil && *license.Features.AdvancedLogging
+	allowAdvancedLogging := true
 
 	if s.Audit == nil {
 		s.Audit = &audit.Audit{}
@@ -603,11 +602,9 @@ func NewServer(options ...Option) (*Server, error) {
 		}
 	}
 
-	s.removeUnlicensedLogTargets(license)
 	s.enableLoggingMetrics()
 
 	s.loggerLicenseListenerId = s.AddLicenseListener(func(oldLicense, newLicense *model.License) {
-		s.removeUnlicensedLogTargets(newLicense)
 		s.enableLoggingMetrics()
 	})
 

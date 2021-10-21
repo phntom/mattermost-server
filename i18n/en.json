@@ -1611,7 +1611,10 @@
   },
   {
     "id": "api.email_batching.send_batched_email_notification.title",
-    "translation": "You have new messages"
+    "translation": {
+      "one": "{{ .SenderName }} sent you new message",
+      "other": "{{ .SenderName }} and {{.CountMinusOne}} others sent you new messages"
+    }
   },
   {
     "id": "api.emoji.create.duplicate.app_error",

@@ -49,6 +49,10 @@ const (
 	ServiceGoogle    = "google"
 	ServiceOffice365 = "office365"
 	ServiceOpenid    = "openid"
+	ServiceFacebook  = "facebook"
+	ServiceLinkedin  = "linkedin"
+	ServiceGithub    = "github"
+	ServiceTwitter   = "twitter"
 
 	GenericNoChannelNotification = "generic_no_channel"
 	GenericNotification          = "generic"
@@ -1505,6 +1509,7 @@ type EmailSettings struct {
 	ConnectionSecurity                *string `access:"environment_smtp,write_restrictable,cloud_restrictable"`
 	SendPushNotifications             *bool   `access:"environment_push_notification_server"`
 	PushNotificationServer            *string `access:"environment_push_notification_server"` // telemetry: none
+	PushNotificationServerCustom      *string `access:"environment_push_notification_server"` // telemetry: none
 	PushNotificationContents          *string `access:"site_notifications"`
 	PushNotificationBuffer            *int    // telemetry: none
 	EnableEmailBatching               *bool   `access:"site_notifications"`
@@ -3002,6 +3007,10 @@ type Config struct {
 	GoogleSettings            SSOSettings
 	Office365Settings         Office365Settings
 	OpenIdSettings            SSOSettings
+	LinkedInSettings          SSOSettings
+	FacebookSettings          SSOSettings
+	GitHubSettings            SSOSettings
+	TwitterSettings           SSOSettings
 	LdapSettings              LdapSettings
 	ComplianceSettings        ComplianceSettings
 	LocalizationSettings      LocalizationSettings
@@ -3060,6 +3069,14 @@ func (o *Config) GetSSOService(service string) *SSOSettings {
 		return o.Office365Settings.SSOSettings()
 	case ServiceOpenid:
 		return &o.OpenIdSettings
+	case ServiceFacebook:
+		return &o.FacebookSettings
+	case ServiceLinkedin:
+		return &o.LinkedInSettings
+	case ServiceGithub:
+		return &o.GitHubSettings
+	case ServiceTwitter:
+		return &o.TwitterSettings
 	}
 
 	return nil
@@ -3099,6 +3116,10 @@ func (o *Config) SetDefaults() {
 	o.GitLabSettings.setDefaults("", "", "", "", "")
 	o.GoogleSettings.setDefaults(GoogleSettingsDefaultScope, GoogleSettingsDefaultAuthEndpoint, GoogleSettingsDefaultTokenEndpoint, GoogleSettingsDefaultUserAPIEndpoint, "")
 	o.OpenIdSettings.setDefaults(OpenidSettingsDefaultScope, "", "", "", "#145DBF")
+	o.FacebookSettings.setDefaults("", "", "", "", "")
+	o.LinkedInSettings.setDefaults("", "", "", "", "")
+	o.GitHubSettings.setDefaults("", "", "", "", "")
+	o.TwitterSettings.setDefaults("", "", "", "", "")
 	o.ServiceSettings.SetDefaults(isUpdate)
 	o.PasswordSettings.SetDefaults()
 	o.TeamSettings.SetDefaults()
@@ -3760,6 +3781,22 @@ func (o *Config) Sanitize() {
 
 	if o.OpenIdSettings.Secret != nil && *o.OpenIdSettings.Secret != "" {
 		*o.OpenIdSettings.Secret = FakeSetting
+	}
+
+	if o.FacebookSettings.Secret != nil && *o.FacebookSettings.Secret != "" {
+		*o.FacebookSettings.Secret = FakeSetting
+	}
+
+	if o.LinkedInSettings.Secret != nil && *o.LinkedInSettings.Secret != "" {
+		*o.LinkedInSettings.Secret = FakeSetting
+	}
+
+	if o.GitHubSettings.Secret != nil && *o.GitHubSettings.Secret != "" {
+		*o.GitHubSettings.Secret = FakeSetting
+	}
+
+	if o.TwitterSettings.Secret != nil && *o.TwitterSettings.Secret != "" {
+		*o.TwitterSettings.Secret = FakeSetting
 	}
 
 	*o.SqlSettings.DataSource = FakeSetting

@@ -3,9 +3,9 @@ package oauthgitlab
 import (
 	"encoding/json"
 	"errors"
-	"github.com/mattermost/mattermost-server/v5/einterfaces"
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/shared/mlog"
+	"github.com/mattermost/mattermost-server/v6/einterfaces"
+	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"io"
 )
 
@@ -37,7 +37,7 @@ type FacebookPictureData struct {
 func init() {
 	mlog.Info("Facebook provider is initialized")
 	provider := &FacebookProvider{}
-	einterfaces.RegisterOauthProvider(UserAuthServiceFacebook, provider)
+	einterfaces.RegisterOAuthProvider(UserAuthServiceFacebook, provider)
 }
 
 func userFromFacebookUser(fbu *FacebookUser) *model.User {
@@ -89,7 +89,7 @@ func (fbu *FacebookUser) IsValid() error {
 	return nil
 }
 
-func (m *FacebookProvider) GetUserFromJson(data io.Reader, tokenUser *model.User) (*model.User, error) {
+func (m *FacebookProvider) GetUserFromJSON(data io.Reader, tokenUser *model.User) (*model.User, error) {
 	fbu, err := facebookUserFromJson(data)
 	if err != nil {
 		return nil, err

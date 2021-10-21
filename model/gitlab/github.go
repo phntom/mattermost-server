@@ -8,14 +8,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mattermost/mattermost-server/v5/shared/mlog"
+	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/mattermost/mattermost-server/v5/einterfaces"
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v6/einterfaces"
+	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 const (
@@ -54,7 +54,7 @@ type GitHubEmail struct {
 func init() {
 	mlog.Info("GitHub provider is initialized")
 	provider := &GitHubProvider{}
-	einterfaces.RegisterOauthProvider(UserAuthServiceGitHub, provider)
+	einterfaces.RegisterOAuthProvider(UserAuthServiceGitHub, provider)
 }
 
 func userFromGitHubUser(gou *GitHubUser, email string) *model.User {
@@ -128,7 +128,7 @@ func (gou *GitHubUser) getAuthData() string {
 	return fmt.Sprintf("%d", gou.Id)
 }
 
-func (m *GitHubProvider) GetUserFromJson(data io.Reader, tokenUser *model.User) (*model.User, error) {
+func (m *GitHubProvider) GetUserFromJSON(data io.Reader, tokenUser *model.User) (*model.User, error) {
 	gou, err := githubUserFromJson(data)
 	if err != nil {
 		return nil, err
