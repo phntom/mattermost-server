@@ -109,6 +109,7 @@ func (a *App) PreparePostForClient(originalPost *model.Post, isNewPost, isEditPo
 	if post.DeleteAt > 0 {
 		// For deleted posts we don't fill out metadata nor do we return the post content
 		post.Message = ""
+		post.Metadata = &model.PostMetadata{}
 		return post
 	}
 
@@ -132,7 +133,7 @@ func (a *App) PreparePostForClient(originalPost *model.Post, isNewPost, isEditPo
 
 func (a *App) PreparePostForClientWithEmbedsAndImages(originalPost *model.Post, isNewPost, isEditPost bool) *model.Post {
 	post := a.PreparePostForClient(originalPost, isNewPost, isEditPost)
-	post = a.getEmbedsAndImages(post, true)
+	post = a.getEmbedsAndImages(post, isNewPost)
 	return post
 }
 
@@ -143,14 +144,21 @@ func (a *App) getEmbedsAndImages(post *model.Post, isNewPost bool) *model.Post {
 
 	// Embeds and image dimensions
 	firstLink, images := a.getFirstLinkAndImages(post.Message)
-	if embed, err := a.getEmbedForPost(post, firstLink, isNewPost); err != nil {
-		mlog.Debug("Failed to get embedded content for a post", mlog.String("post_id", post.Id), mlog.Err(err))
-	} else if embed == nil {
+
+	if post.Metadata.Embeds == nil {
 		post.Metadata.Embeds = []*model.PostEmbed{}
-	} else {
-		post.Metadata.Embeds = []*model.PostEmbed{embed}
 	}
 
+	if embed, err := a.getEmbedForPost(post, firstLink, isNewPost); err != nil {
+		appErr, ok := err.(*model.AppError)
+		isNotFound := ok && appErr.StatusCode == http.StatusNotFound
+		// Ignore NotFound errors.
+		if !isNotFound {
+			mlog.Debug("Failed to get embedded content for a post", mlog.String("post_id", post.Id), mlog.Err(err))
+		}
+	} else if embed != nil {
+		post.Metadata.Embeds = append(post.Metadata.Embeds, embed)
+	}
 	post.Metadata.Images = a.getImagesForPost(post, images, isNewPost)
 	return post
 }
@@ -220,6 +228,13 @@ func (a *App) getEmbedForPost(post *model.Post, firstLink string, isNewPost bool
 	if _, ok := post.GetProps()["attachments"]; ok {
 		return &model.PostEmbed{
 			Type: model.PostEmbedMessageAttachment,
+		}, nil
+	}
+
+	if _, ok := post.GetProps()["boards"]; ok && a.Config().FeatureFlags.BoardsUnfurl {
+		return &model.PostEmbed{
+			Type: model.PostEmbedBoards,
+			Data: post.GetProps()["boards"],
 		}, nil
 	}
 
@@ -304,8 +319,13 @@ func (a *App) getImagesForPost(post *model.Post, imageURLs []string, isNewPost b
 
 	for _, imageURL := range imageURLs {
 		if _, image, _, err := a.getLinkMetadata(imageURL, post.CreateAt, isNewPost, post.GetPreviewedPostProp()); err != nil {
-			mlog.Debug("Failed to get dimensions of an image in a post",
-				mlog.String("post_id", post.Id), mlog.String("image_url", imageURL), mlog.Err(err))
+			appErr, ok := err.(*model.AppError)
+			isNotFound := ok && appErr.StatusCode == http.StatusNotFound
+			// Ignore NotFound errors.
+			if !isNotFound {
+				mlog.Debug("Failed to get dimensions of an image in a post",
+					mlog.String("post_id", post.Id), mlog.String("image_url", imageURL), mlog.Err(err))
+			}
 		} else if image != nil {
 			images[imageURL] = image
 		}
@@ -492,15 +512,12 @@ func (a *App) getLinkMetadata(requestURL string, timestamp int64, isNewPost bool
 	}
 
 	var err error
-
 	if looksLikeAPermalink(requestURL, a.GetSiteURL()) && *a.Config().ServiceSettings.EnablePermalinkPreviews && a.Config().FeatureFlags.PermalinkPreviews {
 		referencedPostID := requestURL[len(requestURL)-26:]
 
 		referencedPost, appErr := a.GetSinglePost(referencedPostID)
-		// Ignore 'not found' errors; post could have been deleted via retention policy so we don't want to permanently log a warning.
-		//
 		// TODO: Look into saving a value in the LinkMetadat.Data field to prevent perpetually re-querying for the deleted post.
-		if appErr != nil && appErr.StatusCode != http.StatusNotFound {
+		if appErr != nil {
 			return nil, nil, nil, appErr
 		}
 

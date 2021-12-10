@@ -122,20 +122,16 @@ func (ts *TelemetryService) ensureTelemetryID() {
 	if ts.TelemetryID != "" {
 		return
 	}
-	props, err := ts.dbStore.System().Get()
+
+	id := model.NewId()
+	systemID := &model.System{Name: model.SystemTelemetryId, Value: id}
+	systemID, err := ts.dbStore.System().InsertIfExists(systemID)
 	if err != nil {
 		mlog.Error("unable to get the telemetry ID", mlog.Err(err))
 		return
 	}
 
-	id := props[model.SystemTelemetryId]
-	if id == "" {
-		id = model.NewId()
-		systemID := &model.System{Name: model.SystemTelemetryId, Value: id}
-		ts.dbStore.System().Save(systemID)
-	}
-
-	ts.TelemetryID = id
+	ts.TelemetryID = systemID.Value
 }
 
 func (ts *TelemetryService) getRudderConfig() RudderConfig {
@@ -429,6 +425,7 @@ func (ts *TelemetryService) trackConfig() {
 		"enable_bot_account_creation":                             *cfg.ServiceSettings.EnableBotAccountCreation,
 		"enable_svgs":                                             *cfg.ServiceSettings.EnableSVGs,
 		"enable_latex":                                            *cfg.ServiceSettings.EnableLatex,
+		"enable_inline_latex":                                     *cfg.ServiceSettings.EnableInlineLatex,
 		"enable_opentracing":                                      *cfg.ServiceSettings.EnableOpenTracing,
 		"enable_local_mode":                                       *cfg.ServiceSettings.EnableLocalMode,
 		"managed_resource_paths":                                  isDefault(*cfg.ServiceSettings.ManagedResourcePaths, ""),

@@ -5,7 +5,6 @@ package email
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -327,17 +326,9 @@ func (es *Service) sendBatchedEmailNotification(userID string, notifications []*
 		"Day":      tm.Day(),
 	})
 
-	firstSender, err := es.store.User().Get(context.Background(), notifications[0].post.UserId)
-	if err != nil {
-		mlog.Warn("Unable to find sender of post for batched email notification")
-	}
-
 	data := es.NewEmailTemplateData(user.Locale)
 	data.Props["SiteURL"] = siteURL
-	data.Props["Title"] = translateFunc("api.email_batching.send_batched_email_notification.title", len(notifications), map[string]interface{}{
-		"SenderName":    firstSender.GetDisplayName(displayNameFormat),
-		"CountMinusOne": strconv.Itoa(len(notifications) - 1),
-	})
+	data.Props["Title"] = translateFunc("api.email_batching.send_batched_email_notification.title", len(notifications)-1)
 	data.Props["SubTitle"] = translateFunc("api.email_batching.send_batched_email_notification.subTitle")
 	data.Props["Button"] = translateFunc("api.email_batching.send_batched_email_notification.button")
 	data.Props["ButtonURL"] = siteURL

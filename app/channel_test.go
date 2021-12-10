@@ -17,8 +17,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/mattermost/mattermost-server/v6/app/users"
 	"github.com/mattermost/mattermost-server/v6/model"
-	"github.com/mattermost/mattermost-server/v6/services/users"
 	"github.com/mattermost/mattermost-server/v6/store/storetest/mocks"
 )
 
@@ -1972,12 +1972,12 @@ func TestMarkChannelsAsViewedPanic(t *testing.T) {
 	mockSessionStore := mocks.SessionStore{}
 	mockOAuthStore := mocks.OAuthStore{}
 	var err error
-	th.App.srv.userService, err = users.New(users.ServiceConfig{
+	th.App.ch.srv.userService, err = users.New(users.ServiceConfig{
 		UserStore:    &mockUserStore,
 		SessionStore: &mockSessionStore,
 		OAuthStore:   &mockOAuthStore,
-		ConfigFn:     th.App.srv.Config,
-		LicenseFn:    th.App.srv.License,
+		ConfigFn:     th.App.ch.srv.Config,
+		LicenseFn:    th.App.ch.srv.License,
 	})
 	require.NoError(t, err)
 	mockPreferenceStore := mocks.PreferenceStore{}
