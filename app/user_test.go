@@ -522,7 +522,11 @@ func TestUpdateUserEmail(t *testing.T) {
 		require.Eventually(t, func() bool {
 			var err error
 			tokens, err = th.App.Srv().Store.Token().GetAllTokensByType(TokenTypeVerifyEmail)
-			return err == nil && len(tokens) == 1
+			// We verify the same conditions as the earlier function,
+			// but we also need to ensure that this is not the same token
+			// as before, which is possible if the token updation goroutine
+			// hasn't yet run.
+			return err == nil && len(tokens) == 1 && tokens[0].Token != firstToken.Token
 		}, 100*time.Millisecond, 10*time.Millisecond)
 		secondToken := tokens[0]
 
@@ -1543,7 +1547,7 @@ func TestUpdateThreadReadForUser(t *testing.T) {
 		require.Nil(t, appErr)
 		require.Zero(t, threads.Total)
 
-		_, appErr = th.App.UpdateThreadReadForUser(th.BasicUser.Id, th.BasicChannel.TeamId, rootPost.Id, replyPost.CreateAt)
+		_, appErr = th.App.UpdateThreadReadForUser("currentSessionId", th.BasicUser.Id, th.BasicChannel.TeamId, rootPost.Id, replyPost.CreateAt)
 		require.Nil(t, appErr)
 
 		threads, appErr = th.App.GetThreadsForUser(th.BasicUser.Id, th.BasicTeam.Id, model.GetUserThreadsOpts{})
@@ -1580,7 +1584,7 @@ func TestUpdateThreadReadForUser(t *testing.T) {
 		mockStore.On("User").Return(&mockUserStore)
 		mockStore.On("Thread").Return(&mockThreadStore)
 
-		_, err = th.App.UpdateThreadReadForUser("user1", "team1", "postid", 100)
+		_, err = th.App.UpdateThreadReadForUser("currentSessionId", "user1", "team1", "postid", 100)
 		require.Error(t, err)
 	})
 }

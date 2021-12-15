@@ -1567,6 +1567,10 @@
     "translation": "Failed to delete the recent status. Please try adding the status first or contact your system administrator for details."
   },
   {
+    "id": "api.custom_status.set_custom_statuses.update.app_error",
+    "translation": "Failed to update the custom status. Please add either emoji or custom text status or both."
+  },
+  {
     "id": "api.email.send_warn_metric_ack.failure.app_error",
     "translation": "Failure to send admin acknowledgment email"
   },
@@ -2217,6 +2221,10 @@
   {
     "id": "api.post.patch_post.can_not_update_post_in_deleted.error",
     "translation": "Can not update a post in a deleted channel."
+  },
+  {
+    "id": "api.post.posts_by_ids.invalid_body.request_error",
+    "translation": "The number of Post IDs received has exceeded the maximum size of {{.MaxLength}}"
   },
   {
     "id": "api.post.search_files.invalid_body.app_error",
@@ -3228,7 +3236,7 @@
   },
   {
     "id": "api.templates.email_footer",
-    "translation": "To change your notification preferences, log in to your team site and go to Account Settings > Notifications."
+    "translation": "To change your notification preferences, log in to your team site and go to Settings > Notifications."
   },
   {
     "id": "api.templates.email_footer_v2",
@@ -3269,6 +3277,10 @@
   {
     "id": "api.templates.invite_body.title",
     "translation": "{{ .SenderName }} invited you to join the {{ .TeamDisplayName }} team."
+  },
+  {
+    "id": "api.templates.invite_body.title.reminder",
+    "translation": "Reminder"
   },
   {
     "id": "api.templates.invite_body_footer.info",
@@ -4249,6 +4261,14 @@
   {
     "id": "api.user.verify_email.token_parse.error",
     "translation": "Failed to parse token data from email verification"
+  },
+  {
+    "id": "api.user.view_archived_channels.get_posts_for_channel.app_error",
+    "translation": "Cannot retrieve posts for an archived channel"
+  },
+  {
+    "id": "api.user.view_archived_channels.get_users_in_channel.app_error",
+    "translation": "Cannot retrieve users for an archived channel"
   },
   {
     "id": "api.web_socket.connect.upgrade.app_error",
@@ -5516,7 +5536,7 @@
   },
   {
     "id": "app.notification.footer.info",
-    "translation": " and go to Account Settings > Notifications"
+    "translation": " and go to Settings > Notifications"
   },
   {
     "id": "app.notification.footer.infoLogin",
@@ -5923,6 +5943,10 @@
     "translation": "Unable to get role."
   },
   {
+    "id": "app.role.get_all.app_error",
+    "translation": "Unable to get all the roles."
+  },
+  {
     "id": "app.role.get_by_name.app_error",
     "translation": "Unable to get role."
   },
@@ -5977,6 +6001,10 @@
   {
     "id": "app.session.analytics_session_count.app_error",
     "translation": "Unable to count the sessions."
+  },
+  {
+    "id": "app.session.extend_session_expiry.app_error",
+    "translation": "Unable to extend session length"
   },
   {
     "id": "app.session.get.app_error",
@@ -6369,6 +6397,10 @@
   {
     "id": "app.user.get_recently_active_users.app_error",
     "translation": "We encountered an error while finding the recently active users."
+  },
+  {
+    "id": "app.user.get_thread_count_for_user.app_error",
+    "translation": "We could not get thread count for the user."
   },
   {
     "id": "app.user.get_thread_membership_for_user.app_error",
@@ -7025,6 +7057,14 @@
   {
     "id": "ent.elasticsearch.generic.disabled",
     "translation": "Elasticsearch search is not enabled on this server"
+  },
+  {
+    "id": "ent.elasticsearch.getAllChannelMembers.error",
+    "translation": "Failed to get all channel members"
+  },
+  {
+    "id": "ent.elasticsearch.getAllTeamMembers.error",
+    "translation": "Failed to get all team members"
   },
   {
     "id": "ent.elasticsearch.index_channel.error",
