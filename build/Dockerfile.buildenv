@@ -10,9 +10,9 @@ ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="6.2"
-ENV BUILD_NUMBER="6.2.0"
-ENV BUILD_DATE="Wed Dec 15 20:33:21 IST 2021"
-ENV BUILD_HASH="b8cfa04656a7e48920a41daf19bb801518f3725e"
+ENV BUILD_NUMBER="6.2.1"
+ENV BUILD_DATE="Wed Dec 15 23:13:19 IST 2021"
+ENV BUILD_HASH="499126be2a63e4061cbfb8a7efc10647ddb53a4b"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -47,4 +47,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
 
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.2.0-beta1
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.2.1
