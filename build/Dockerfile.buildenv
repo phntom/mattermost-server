@@ -11,8 +11,8 @@ ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="6.2"
 ENV BUILD_NUMBER="6.2.1"
-ENV BUILD_DATE="Wed Dec 15 23:13:19 IST 2021"
-ENV BUILD_HASH="499126be2a63e4061cbfb8a7efc10647ddb53a4b"
+ENV BUILD_DATE="Mon Dec 20 17:09:07 IST 2021"
+ENV BUILD_HASH="abb67773d54d7c5b33a699f8f02088bcce736a28"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -30,7 +30,7 @@ COPY i18n/en.json i18n/
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
 
-FROM mattermost/mattermost-team-edition:6.0.0
+FROM mattermost/mattermost-team-edition:6.2.1
 RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz" && \
   wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.4.0/com.mattermost.plugin-todo-0.4.0.tar.gz.sig"
 
