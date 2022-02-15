@@ -640,6 +640,27 @@ func (s *RetryLayerChannelStore) Autocomplete(userID string, term string, includ
 
 }
 
+func (s *RetryLayerChannelStore) Autocomplete(userID string, userID string, term string, includeDeleted bool) (model.ChannelListWithTeamData, error) {
+
+	tries := 0
+	for {
+		result, err := s.ChannelStore.Autocomplete(userID, userID, term, includeDeleted)
+		if err == nil {
+			return result, nil
+		}
+		if !isRepeatableError(err) {
+			return result, err
+		}
+		tries++
+		if tries >= 3 {
+			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
+			return result, err
+		}
+		timepkg.Sleep(100 * timepkg.Millisecond)
+	}
+
+}
+
 func (s *RetryLayerChannelStore) AutocompleteInTeam(teamID string, userID string, term string, includeDeleted bool) (model.ChannelList, error) {
 
 	tries := 0
@@ -1996,27 +2017,6 @@ func (s *RetryLayerChannelStore) MigrateChannelMembers(fromChannelID string, fro
 		if tries >= 3 {
 			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
 			return result, err
-		}
-		timepkg.Sleep(100 * timepkg.Millisecond)
-	}
-
-}
-
-func (s *RetryLayerChannelStore) MigratePublicChannels() error {
-
-	tries := 0
-	for {
-		err := s.ChannelStore.MigratePublicChannels()
-		if err == nil {
-			return nil
-		}
-		if !isRepeatableError(err) {
-			return err
-		}
-		tries++
-		if tries >= 3 {
-			err = errors.Wrap(err, "giving up after 3 consecutive repeatable transaction failures")
-			return err
 		}
 		timepkg.Sleep(100 * timepkg.Millisecond)
 	}
@@ -10771,9 +10771,9 @@ func (s *RetryLayerThreadStore) UpdateUnreadsByChannel(userId string, changedThr
 
 }
 
-func (s *RetryLayerTokenStore) Cleanup() {
+func (s *RetryLayerTokenStore) Cleanup(expiryTime int64) {
 
-	s.TokenStore.Cleanup()
+	s.TokenStore.Cleanup(expiryTime)
 
 }
 

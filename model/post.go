@@ -227,6 +227,11 @@ func (o *Post) ToJSON() (string, error) {
 	return string(b), err
 }
 
+func (o *Post) EncodeJSON(w io.Writer) error {
+	o.StripActionIntegrations()
+	return json.NewEncoder(w).Encode(o)
+}
+
 type GetPostsSinceOptions struct {
 	UserId                   string
 	ChannelId                string

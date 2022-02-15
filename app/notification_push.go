@@ -393,7 +393,6 @@ func (a *App) sendToPushProxy(msg *model.PushNotification, session *model.Sessio
 		mlog.String("userId", session.UserId),
 		mlog.String("postId", msg.PostId),
 		mlog.String("status", model.PushSendPrepare),
-		mlog.String("server", serverPrefix),
 	)
 
 	msgJSON, jsonErr := json.Marshal(msg)

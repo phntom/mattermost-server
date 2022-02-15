@@ -3640,6 +3640,65 @@ func TestLoginCookies(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("should return cookie with MMCLOUDURL for cloud installations", func(t *testing.T) {
+		updateConfig := func(cfg *model.Config) {
+			*cfg.ServiceSettings.SiteURL = "https://testchips.cloud.mattermost.com"
+		}
+		th := SetupAndApplyConfigBeforeLogin(t, updateConfig).InitBasic()
+		defer th.TearDown()
+
+		th.App.Srv().SetLicense(model.NewTestLicense("cloud"))
+
+		_, resp, _ := th.Client.Login(th.BasicUser.Email, th.BasicUser.Password)
+
+		val := strings.Split(resp.Header["Set-Cookie"][0], ";")
+		cloudSessionCookie := strings.Split(val[0], "=")[1]
+		domain := strings.Split(val[2], "=")[1]
+
+		assert.Equal(t, "testchips", cloudSessionCookie)
+		assert.Equal(t, "mattermost.com", domain)
+	})
+
+	t.Run("should NOT return cookie with MMCLOUDURL for cloud installations without expected format of cloud URL", func(t *testing.T) {
+		updateConfig := func(cfg *model.Config) {
+			*cfg.ServiceSettings.SiteURL = "https://testchips.com" // correct cloud URL would be https://testchips.cloud.mattermost.com
+		}
+		th := SetupAndApplyConfigBeforeLogin(t, updateConfig).InitBasic()
+		defer th.TearDown()
+
+		th.App.Srv().SetLicense(model.NewTestLicense("cloud"))
+
+		_, resp, _ := th.Client.Login(th.BasicUser.Email, th.BasicUser.Password)
+
+		cloudSessionCookie := ""
+		for _, cookie := range resp.Header["Set-Cookie"] {
+			if match := regexp.MustCompile("^" + model.SessionCookieCloudUrl + "=([a-z0-9]+)").FindStringSubmatch(cookie); match != nil {
+				cloudSessionCookie = match[1]
+			}
+		}
+		// no cookie set
+		assert.Equal(t, "", cloudSessionCookie)
+	})
+
+	t.Run("should NOT return cookie with MMCLOUDURL for NON cloud installations", func(t *testing.T) {
+		updateConfig := func(cfg *model.Config) {
+			*cfg.ServiceSettings.SiteURL = "https://testchips.com"
+		}
+		th := SetupAndApplyConfigBeforeLogin(t, updateConfig).InitBasic()
+		defer th.TearDown()
+
+		_, resp, _ := th.Client.Login(th.BasicUser.Email, th.BasicUser.Password)
+
+		cloudSessionCookie := ""
+		for _, cookie := range resp.Header["Set-Cookie"] {
+			if match := regexp.MustCompile("^" + model.SessionCookieCloudUrl + "=([a-z0-9]+)").FindStringSubmatch(cookie); match != nil {
+				cloudSessionCookie = match[1]
+			}
+		}
+		// no cookie set
+		assert.Equal(t, "", cloudSessionCookie)
+	})
 }
 
 func TestCBALogin(t *testing.T) {
@@ -5887,6 +5946,11 @@ func TestThreadSocketEvents(t *testing.T) {
 func TestFollowThreads(t *testing.T) {
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
+
+	th.App.UpdateConfig(func(cfg *model.Config) {
+		*cfg.ServiceSettings.ThreadAutoFollow = true
+		*cfg.ServiceSettings.CollapsedThreads = model.CollapsedThreadsDefaultOn
+	})
 
 	t.Run("1 thread", func(t *testing.T) {
 		client := th.Client
