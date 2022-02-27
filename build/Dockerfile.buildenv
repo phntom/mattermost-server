@@ -1,4 +1,4 @@
-FROM golang:1.16.9 as builder
+FROM golang:1.16 as builder
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
 WORKDIR /home
@@ -10,9 +10,9 @@ ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="6.4"
-ENV BUILD_NUMBER="6.4.0"
-ENV BUILD_DATE="Tue Feb 15 17:15:40 IST 2022"
-ENV BUILD_HASH="94ff351b520e35b685407388414478d71d27cb25"
+ENV BUILD_NUMBER="6.4.1"
+ENV BUILD_DATE="Sun Feb 27 19:31:03 IST 2022"
+ENV BUILD_HASH="3de8b98369d06ffc1cb58d88095160e77e919f76"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -47,4 +47,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
 
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.4.0-beta1
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.4.1
