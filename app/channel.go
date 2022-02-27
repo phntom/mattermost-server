@@ -2598,8 +2598,6 @@ func (a *App) MarkChannelAsUnreadFromPost(postID string, userID string, collapse
 	if nErr != nil {
 		return channelUnread, model.NewAppError("MarkChannelAsUnreadFromPost", "app.channel.update_last_viewed_at_post.app_error", nil, nErr.Error(), http.StatusInternalServerError)
 	}
-	return channelUnread, nil
-}
 
 	a.sendWebSocketPostUnreadEvent(channelUnread, postID, false)
 	a.UpdateMobileAppBadge(userID)

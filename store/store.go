@@ -605,7 +605,6 @@ type TokenStore interface {
 	GetByToken(token string) (*model.Token, error)
 	Cleanup(expiryTime int64)
 	GetAllTokensByType(tokenType string) ([]*model.Token, error)
-	GetAllTokensByType(tokenType string) ([]*model.Token, error)
 	RemoveAllTokensByType(tokenType string) error
 }
 
