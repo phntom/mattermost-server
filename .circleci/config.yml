@@ -26,7 +26,7 @@ jobs:
           cd ../
           git clone --depth=1 --no-single-branch https://github.com/mattermost/mattermost-webapp.git
           cd mattermost-webapp
-          git checkout $CIRCLE_BRANCH || git checkout release-6.4
+          git checkout $CIRCLE_BRANCH || git checkout release-6.5
           export WEBAPP_GIT_COMMIT=$(git rev-parse HEAD)
           echo "$WEBAPP_GIT_COMMIT"
 
@@ -202,10 +202,11 @@ jobs:
             make gen-serialized
             if [[ -n $(git status --porcelain) ]]; then echo "Please update the serialized files using 'make gen-serialized'"; exit 1; fi
 
-  # Dedicate job for golangci-lint it does not need anything only the server code for that
+  # Dedicated job for golangci-lint it does not need anything only the server code for that
   # and to make more clear when the job fails
   check-golangci-lint:
     docker:
+      # Keep the version in sync with the command in Makefile
       - image: golangci/golangci-lint:v1.39.0
     steps:
       - checkout
@@ -285,10 +286,6 @@ jobs:
       - store_artifacts:
           path: ~/mattermost/mattermost-server/dist/mattermost-team-osx-arm64.tar.gz
       - store_artifacts:
-          path: ~/mattermost/mattermost-server/dist/mattermost-team-linux-arm64.tar.gz
-      - store_artifacts:
-          path: ~/mattermost/mattermost-server/dist/mattermost-team-osx-arm64.tar.gz
-      - store_artifacts:
           path: ~/mattermost/mattermost-server/dist/mattermost-team-windows-amd64.zip
       - persist_to_workspace:
           root: ~/mattermost
@@ -321,7 +318,7 @@ jobs:
       - run:
           name: Wait for docker compose
           command: |
-            sleep 5
+            until docker network inspect circleci_mm-test; do echo "Waiting for Docker Compose Network..."; sleep 1; done;
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
       - run:
@@ -381,7 +378,7 @@ jobs:
       - run:
           name: Wait for docker compose
           command: |
-            sleep 5
+            until docker network inspect circleci_mm-test; do echo "Waiting for Docker Compose Network..."; sleep 1; done;
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://mysql:3306; do echo waiting for mysql; sleep 5; done;"
             docker run --net circleci_mm-test appropriate/curl:latest sh -c "until curl --max-time 5 --output - http://elasticsearch:9200; do echo waiting for elasticsearch; sleep 5; done;"
       - run:
@@ -401,7 +398,7 @@ jobs:
               -v ~/mattermost:/mattermost \
               -w /mattermost/mattermost-server \
               mattermost/mattermost-build-server:20210810_golang-1.16.7 \
-              bash -c "ulimit -n 8096; make ARGS='version' run-cli && make MM_SQLSETTINGS_DATASOURCE='postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10' ARGS='version' run-cli"
+              bash -c "ulimit -n 8096; make ARGS='db migrate' run-cli && make MM_SQLSETTINGS_DATASOURCE='postgres://mmuser:mostest@postgres:5432/latest?sslmode=disable&connect_timeout=10' ARGS='db migrate' run-cli"
 
             echo "Generating dump"
             docker-compose --no-ansi exec -T postgres pg_dump --schema-only -d migrated -U mmuser > migrated.sql
@@ -430,7 +427,7 @@ jobs:
               -v ~/mattermost:/mattermost \
               -w /mattermost/mattermost-server \
               mattermost/mattermost-build-server:20210810_golang-1.16.7 \
-              bash -c "ulimit -n 8096; make ARGS='version' run-cli && make MM_SQLSETTINGS_DATASOURCE='mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s' ARGS='version' run-cli"
+              bash -c "ulimit -n 8096; make ARGS='db migrate' run-cli && make MM_SQLSETTINGS_DATASOURCE='mmuser:mostest@tcp(mysql:3306)/latest?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s' ARGS='db migrate' run-cli"
 
             echo "Generating dump"
             docker-compose --no-ansi exec -T mysql mysqldump --skip-opt --no-data --compact -u root -pmostest migrated > migrated.sql
@@ -555,18 +552,18 @@ workflows:
             - check-mattermost-vet
             - check-golangci-lint
             - build-api-spec
-#      - upload-s3-sha:
-#          context: mattermost-ci-pr-builds-s3
-#          requires:
-#            - build
-#      - upload-s3:
-#          context: mattermost-ci-pr-builds-s3
-#          requires:
-#            - build
-#      - build-docker:
-#          context: matterbuild-docker
-#          requires:
-#            - upload-s3-sha
+      - upload-s3-sha:
+          context: mattermost-ci-pr-builds-s3
+          requires:
+            - build
+      - upload-s3:
+          context: mattermost-ci-pr-builds-s3
+          requires:
+            - build
+      - build-docker:
+          context: matterbuild-docker
+          requires:
+            - upload-s3-sha
       - test:
           name: test-mysql
           dbdriver: mysql
