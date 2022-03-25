@@ -9,10 +9,10 @@ ENV MM_NO_DOCKER="true"
 ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
-ENV BUILD_VERSION="6.4"
-ENV BUILD_NUMBER="6.4.1"
-ENV BUILD_DATE="Sun Feb 27 19:31:03 IST 2022"
-ENV BUILD_HASH="3de8b98369d06ffc1cb58d88095160e77e919f76"
+ENV BUILD_VERSION="6.5"
+ENV BUILD_NUMBER="6.5.0"
+ENV BUILD_DATE="Thu 24 Mar 2022 17:52:26 IST"
+ENV BUILD_HASH="9936ee1aa7dc22da6662ac98303e578300111d33"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -30,9 +30,9 @@ COPY i18n/en.json i18n/
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
 
-FROM mattermost/mattermost-team-edition:6.3.3
-RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.5.0/com.mattermost.plugin-todo-0.5.0.tar.gz" && \
-  wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.5.0/com.mattermost.plugin-todo-0.5.0.tar.gz.sig"
+FROM mattermost/mattermost-team-edition:6.5.0
+RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.5.1/com.mattermost.plugin-todo-0.5.1.tar.gz" && \
+  wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.5.1/com.mattermost.plugin-todo-0.5.1.tar.gz.sig"
 
 #USER 0
 #RUN apk add --no-cache git make musl-dev go libc6-compat
@@ -47,4 +47,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
 
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.4.1
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.5.0

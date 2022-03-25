@@ -135,10 +135,6 @@ func (s *Server) initEnterprise() {
 		s.LicenseManager = licenseInterface(s)
 	}
 
-	if licenseInterface != nil {
-		s.LicenseManager = licenseInterface(s)
-	}
-
 	if ldapInterface != nil {
 		s.Ldap = ldapInterface(s)
 	}
