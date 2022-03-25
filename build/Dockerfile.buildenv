@@ -11,8 +11,8 @@ ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="6.5"
 ENV BUILD_NUMBER="6.5.0"
-ENV BUILD_DATE="Thu 24 Mar 2022 17:52:26 IST"
-ENV BUILD_HASH="9936ee1aa7dc22da6662ac98303e578300111d33"
+ENV BUILD_DATE="Fri 25 Mar 2022 14:16:52 IDT"
+ENV BUILD_HASH="91c2686d2ecd105260ed2e5d8f73f40e883b1ed7"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -26,7 +26,9 @@ COPY model/config.go model/switch_request.go model/
 COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/linkedin.go model/gitlab/github.go model/gitlab/
 COPY services/telemetry/telemetry.go services/telemetry/
 COPY i18n/en.json i18n/
-
+COPY web/static.go web/
+COPY go.mod* .
+RUN go mod vendor
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
 
@@ -47,4 +49,6 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # mattermost/mattermost-build-server:20201119_golang-1.15.5
 
+# rm -rf dist/*
+# cp -r client/* dist/
 # docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.5.0
