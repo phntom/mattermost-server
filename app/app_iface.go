@@ -527,7 +527,7 @@ type AppIface interface {
 	ExportPermissions(w io.Writer) error
 	ExtractContentFromFileInfo(fileInfo *model.FileInfo) error
 	FetchSamlMetadataFromIdp(url string) ([]byte, *model.AppError)
-	FileBackend() (filestore.FileBackend, *model.AppError)
+	FileBackend() filestore.FileBackend
 	FileExists(path string) (bool, *model.AppError)
 	FileModTime(path string) (time.Time, *model.AppError)
 	FileSize(path string) (int64, *model.AppError)
@@ -550,6 +550,7 @@ type AppIface interface {
 	GetAllTeamsPage(offset int, limit int, opts *model.TeamSearch) ([]*model.Team, *model.AppError)
 	GetAllTeamsPageWithCount(offset int, limit int, opts *model.TeamSearch) (*model.TeamsWithCount, *model.AppError)
 	GetAnalytics(name string, teamID string) (model.AnalyticsRows, *model.AppError)
+	GetAppliedSchemaMigrations() ([]model.AppliedMigration, *model.AppError)
 	GetAudits(userID string, limit int) (model.Audits, *model.AppError)
 	GetAuditsPage(userID string, page int, perPage int) (model.Audits, *model.AppError)
 	GetAuthorizationCode(w http.ResponseWriter, r *http.Request, service string, props map[string]string, loginHint string) (string, *model.AppError)
@@ -840,6 +841,7 @@ type AppIface interface {
 	LimitedClientConfig() map[string]string
 	ListAllCommands(teamID string, T i18n.TranslateFunc) ([]*model.Command, *model.AppError)
 	ListDirectory(path string) ([]string, *model.AppError)
+	ListDirectoryRecursively(path string) ([]string, *model.AppError)
 	ListExports() ([]string, *model.AppError)
 	ListImports() ([]string, *model.AppError)
 	ListPluginKeys(pluginID string, page, perPage int) ([]string, *model.AppError)
@@ -977,6 +979,7 @@ type AppIface interface {
 	SendNotifications(post *model.Post, team *model.Team, channel *model.Channel, sender *model.User, parentPostList *model.PostList, setOnline bool) ([]string, error)
 	SendPasswordReset(email string, siteURL string) (bool, *model.AppError)
 	SendPaymentFailedEmail(failedPayment *model.FailedPayment) *model.AppError
+	SendTestPushNotification(deviceID string) string
 	ServeInterPluginRequest(w http.ResponseWriter, r *http.Request, sourcePluginId, destinationPluginId string)
 	SessionHasPermissionTo(session model.Session, permission *model.Permission) bool
 	SessionHasPermissionToAny(session model.Session, permissions []*model.Permission) bool

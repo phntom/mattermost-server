@@ -161,6 +161,7 @@ func TestHubSessionRevokeRace(t *testing.T) {
 	mockStore.On("User").Return(&mockUserStore)
 	mockStore.On("Post").Return(&mockPostStore)
 	mockStore.On("System").Return(&mockSystemStore)
+	mockStore.On("GetDBSchemaVersion").Return(1, nil)
 
 	userService, err := users.New(users.ServiceConfig{
 		UserStore:    &mockUserStore,
@@ -338,25 +339,37 @@ func TestHubConnIndexInactive(t *testing.T) {
 }
 
 func TestReliableWebSocketSend(t *testing.T) {
-	t.Skip("MM-42033")
-	th := Setup(t)
+	testCluster := &testlib.FakeClusterInterface{}
+
+	th := SetupWithClusterMock(t, testCluster)
 	defer th.TearDown()
 
-	testCluster := &testlib.FakeClusterInterface{}
-	th.Server.Cluster = testCluster
-
-	ev := model.NewWebSocketEvent("test_reliable_event", "", "", "", nil)
+	ev := model.NewWebSocketEvent("test_unreliable_event", "", "", "", nil)
 	ev = ev.SetBroadcast(&model.WebsocketBroadcast{})
 	th.App.Publish(ev)
-	ev = ev.SetBroadcast(&model.WebsocketBroadcast{
+	ev2 := model.NewWebSocketEvent("test_reliable_event", "", "", "", nil)
+	ev2 = ev2.SetBroadcast(&model.WebsocketBroadcast{
 		ReliableClusterSend: true,
 	})
-	th.App.Publish(ev)
+	th.App.Publish(ev2)
 
 	messages := testCluster.GetMessages()
-	require.Len(t, messages, 2)
-	require.Equal(t, model.ClusterSendBestEffort, messages[0].SendType)
-	require.Equal(t, model.ClusterSendReliable, messages[1].SendType)
+
+	evJSON, err := ev.ToJSON()
+	require.NoError(t, err)
+	ev2JSON, err := ev2.ToJSON()
+	require.NoError(t, err)
+
+	require.Contains(t, messages, &model.ClusterMessage{
+		Event:    model.ClusterEventPublish,
+		Data:     evJSON,
+		SendType: model.ClusterSendBestEffort,
+	})
+	require.Contains(t, messages, &model.ClusterMessage{
+		Event:    model.ClusterEventPublish,
+		Data:     ev2JSON,
+		SendType: model.ClusterSendReliable,
+	})
 }
 
 func TestHubIsRegistered(t *testing.T) {

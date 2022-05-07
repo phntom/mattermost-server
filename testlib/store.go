@@ -66,6 +66,7 @@ func GetMockStoreForSetupFunctions() *mocks.Store {
 	systemStore.On("GetByName", model.MigrationKeyAddManageSecureConnectionsPermissions).Return(&model.System{Name: model.MigrationKeyAddManageSecureConnectionsPermissions, Value: "true"}, nil)
 	systemStore.On("GetByName", model.MigrationKeyAddPlaybooksPermissions).Return(&model.System{Name: model.MigrationKeyAddPlaybooksPermissions, Value: "true"}, nil)
 	systemStore.On("GetByName", model.MigrationKeyAddCustomUserGroupsPermissions).Return(&model.System{Name: model.MigrationKeyAddCustomUserGroupsPermissions, Value: "true"}, nil)
+	systemStore.On("GetByName", model.MigrationKeyAddPlayboosksManageRolesPermissions).Return(&model.System{Name: model.MigrationKeyAddPlayboosksManageRolesPermissions, Value: "true"}, nil)
 	systemStore.On("InsertIfExists", mock.AnythingOfType("*model.System")).Return(&model.System{}, nil).Once()
 	systemStore.On("Save", mock.AnythingOfType("*model.System")).Return(nil)
 
@@ -109,5 +110,7 @@ func GetMockStoreForSetupFunctions() *mocks.Store {
 	mockStore.On("Session").Return(&sessionStore)
 	mockStore.On("OAuth").Return(&oAuthStore)
 	mockStore.On("Group").Return(&groupStore)
+	mockStore.On("GetDBSchemaVersion").Return(1, nil)
+
 	return &mockStore
 }
