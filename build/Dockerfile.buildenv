@@ -9,9 +9,9 @@ ENV MM_NO_DOCKER="true"
 ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
-ENV BUILD_VERSION="6.5"
-ENV BUILD_NUMBER="6.5.0"
-ENV BUILD_DATE="Fri 25 Mar 2022 14:16:52 IDT"
+ENV BUILD_VERSION="6.6"
+ENV BUILD_NUMBER="6.6.0"
+ENV BUILD_DATE="Sat 07 May 2022 16:09:35 IDT"
 ENV BUILD_HASH="91c2686d2ecd105260ed2e5d8f73f40e883b1ed7"
 
 ENV BUILD_ENTERPRISE_READY="false"
@@ -51,4 +51,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # rm -rf dist/*
 # cp -r client/* dist/
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.5.0
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.6.0
