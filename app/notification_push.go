@@ -584,6 +584,10 @@ func (a *App) BuildPushNotificationMessage(contentsConfig string, post *model.Po
 }
 
 func (a *App) SendTestPushNotification(deviceID string) string {
+	if !a.canSendPushNotifications() {
+		return "false"
+	}
+
 	msg := &model.PushNotification{
 		Version:  "2",
 		Type:     model.PushTypeTest,
