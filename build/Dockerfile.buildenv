@@ -1,4 +1,4 @@
-FROM golang:1.18.1@sha256:ee752bc53c628ff789bacefb714cff721701042ffa9eb736f7b2ed4e9f2bdab6
+FROM golang:1.18.1@sha256:ee752bc53c628ff789bacefb714cff721701042ffa9eb736f7b2ed4e9f2bdab6 AS builder
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
 WORKDIR /home
@@ -27,7 +27,7 @@ COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/linkedin.go mo
 COPY services/telemetry/telemetry.go services/telemetry/
 COPY i18n/en.json i18n/
 COPY web/static.go web/
-COPY go.mod* .
+COPY go.mod go.sum ./
 RUN go mod vendor
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
