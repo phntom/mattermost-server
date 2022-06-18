@@ -9,10 +9,10 @@ ENV MM_NO_DOCKER="true"
 ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
-ENV BUILD_VERSION="6.6"
-ENV BUILD_NUMBER="6.6.0"
-ENV BUILD_DATE="Sat 07 May 2022 16:09:35 IDT"
-ENV BUILD_HASH="91c2686d2ecd105260ed2e5d8f73f40e883b1ed7"
+ENV BUILD_VERSION="6.7"
+ENV BUILD_NUMBER="6.7.2"
+ENV BUILD_DATE="Sat 18 Jun 2022 11:06:12 IDT"
+ENV BUILD_HASH="7d9f9a1f40480b6a15e9b2e73d256087e1a02ac1"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -32,9 +32,9 @@ RUN go mod vendor
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
 
-FROM mattermost/mattermost-team-edition:6.5.0
-RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.5.1/com.mattermost.plugin-todo-0.5.1.tar.gz" && \
-  wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.5.1/com.mattermost.plugin-todo-0.5.1.tar.gz.sig"
+FROM mattermost/mattermost-team-edition:6.7.2
+RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.6.0/com.mattermost.plugin-todo-0.6.0.tar.gz" && \
+  wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.6.0/com.mattermost.plugin-todo-0.6.0.tar.gz.sig"
 
 #USER 0
 #RUN apk add --no-cache git make musl-dev go libc6-compat
@@ -51,4 +51,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # rm -rf dist/*
 # cp -r client/* dist/
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.6.0
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.7.2-beta1
