@@ -1,3 +1,54 @@
 FROM golang:1.18.1@sha256:ee752bc53c628ff789bacefb714cff721701042ffa9eb736f7b2ed4e9f2bdab6
 
 RUN apt-get update && apt-get install -y make git apt-transport-https ca-certificates curl software-properties-common build-essential zip xmlsec1 jq
+WORKDIR /home
+RUN git clone https://github.com/mattermost/mattermost-server.git
+WORKDIR /home/mattermost-server
+
+ENV MM_NO_DOCKER="true"
+ENV RUN_SERVER_IN_BACKGROUND="false"
+ENV MM_CLUSTERSETTINGS_ENABLE="true"
+ENV BUILD_ENTERPRISE_READY="false"
+ENV BUILD_VERSION="6.7"
+ENV BUILD_NUMBER="6.7.2"
+ENV BUILD_DATE="Sat 18 Jun 2022 11:06:12 IDT"
+ENV BUILD_HASH="7d9f9a1f40480b6a15e9b2e73d256087e1a02ac1"
+
+ENV BUILD_ENTERPRISE_READY="false"
+RUN git pull
+RUN git checkout release-$BUILD_VERSION
+
+COPY api4/user.go api4/
+COPY app/email/email_batching.go app/email/
+COPY app/server.go app/user.go app/oauth.go app/notification_push.go app/
+COPY config/client.go config/utils.go config/
+COPY model/config.go model/switch_request.go model/
+COPY model/gitlab/google.go model/gitlab/facebook.go model/gitlab/linkedin.go model/gitlab/github.go model/gitlab/
+COPY services/telemetry/telemetry.go services/telemetry/
+COPY i18n/en.json i18n/
+COPY web/static.go web/
+COPY go.mod go.sum ./
+RUN go mod vendor
+RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
+
+
+FROM mattermost/mattermost-team-edition:6.7.2
+RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.6.0/com.mattermost.plugin-todo-0.6.0.tar.gz" && \
+  wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.6.0/com.mattermost.plugin-todo-0.6.0.tar.gz.sig"
+
+#USER 0
+#RUN apk add --no-cache git make musl-dev go libc6-compat
+#USER mattermost
+#RUN go get github.com/derekparker/delve/cmd/dlv
+#ENV PATH=/mattermost/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mattermost/go/bin/
+#CMD dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /mattermost/bin/mattermost
+
+COPY dist/ client/
+
+COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
+
+# mattermost/mattermost-build-server:20201119_golang-1.15.5
+
+# rm -rf dist/*
+# cp -r client/* dist/
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:6.7.2-beta1

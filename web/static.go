@@ -11,6 +11,7 @@ import (
 
 	"github.com/mattermost/gziphandler"
 
+	"github.com/lpar/gzipped/v2"
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"github.com/mattermost/mattermost-server/v6/shared/templates"
@@ -31,8 +32,8 @@ func (w *Web) InitStatic() {
 
 		subpath, _ := utils.GetSubpathFromConfig(w.srv.Config())
 
-		staticHandler := staticFilesHandler(http.StripPrefix(path.Join(subpath, "static"), http.FileServer(http.Dir(staticDir))))
-		pluginHandler := staticFilesHandler(http.StripPrefix(path.Join(subpath, "static", "plugins"), http.FileServer(http.Dir(*w.srv.Config().PluginSettings.ClientDirectory))))
+		staticHandler := staticFilesHandler(http.StripPrefix(path.Join(subpath, "static"), gzipped.FileServer(gzipped.Dir(staticDir))))
+		pluginHandler := staticFilesHandler(http.StripPrefix(path.Join(subpath, "static", "plugins"), gzipped.FileServer(gzipped.Dir(*w.srv.Config().PluginSettings.ClientDirectory))))
 
 		if *w.srv.Config().ServiceSettings.WebserverMode == "gzip" {
 			staticHandler = gziphandler.GzipHandler(staticHandler)

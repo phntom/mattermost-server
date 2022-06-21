@@ -856,7 +856,7 @@ func (a *App) AuthorizeOAuthUser(w http.ResponseWriter, r *http.Request, service
 		return nil, "", stateProps, nil, model.NewAppError("AuthorizeOAuthUser", "api.user.authorize_oauth_user.bad_response.app_error", nil, fmt.Sprintf("response_body=%s, status_code=%d, error=%v", buf.String(), resp.StatusCode, err), http.StatusInternalServerError)
 	}
 
-	if strings.ToLower(ar.TokenType) != model.AccessTokenType {
+	if service != "linkedin" && strings.ToLower(ar.TokenType) != model.AccessTokenType {
 		return nil, "", stateProps, nil, model.NewAppError("AuthorizeOAuthUser", "api.user.authorize_oauth_user.bad_token.app_error", nil, "token_type="+ar.TokenType+", response_body="+buf.String(), http.StatusInternalServerError)
 	}
 
@@ -868,7 +868,11 @@ func (a *App) AuthorizeOAuthUser(w http.ResponseWriter, r *http.Request, service
 	p.Set("access_token", ar.AccessToken)
 
 	var userFromToken *model.User
-	if ar.IdToken != "" {
+	userFromToken, err = provider.GetUserFromIdToken("Bearer " + ar.AccessToken)
+	if err != nil {
+		return nil, "", stateProps, nil, model.NewAppError("AuthorizeOAuthUser", "api.user.authorize_oauth_user.token_failed.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	if userFromToken != nil && ar.IdToken != "" {
 		userFromToken, err = provider.GetUserFromIdToken(ar.IdToken)
 		if err != nil {
 			return nil, "", stateProps, nil, model.NewAppError("AuthorizeOAuthUser", "api.user.authorize_oauth_user.token_failed.app_error", nil, err.Error(), http.StatusInternalServerError)

@@ -1774,8 +1774,12 @@ func login(c *Context, w http.ResponseWriter, r *http.Request) {
 		openidEnabled := *config.OpenIdSettings.Enable
 		googleEnabled := *config.GoogleSettings.Enable
 		office365Enabled := *config.Office365Settings.Enable
+		facebookEnabled := *config.FacebookSettings.Enable
+		linkedinEnabled := *config.LinkedInSettings.Enable
+		githubEnabled := *config.GitHubSettings.Enable
+		twitterEnabled := *config.TwitterSettings.Enable
 
-		if samlEnabled || gitlabEnabled || googleEnabled || office365Enabled || openidEnabled {
+		if samlEnabled || gitlabEnabled || googleEnabled || office365Enabled || openidEnabled || facebookEnabled || linkedinEnabled || githubEnabled || twitterEnabled {
 			c.Err = model.NewAppError("login", "api.user.login.invalid_credentials_sso", nil, "", http.StatusUnauthorized)
 			return
 		}

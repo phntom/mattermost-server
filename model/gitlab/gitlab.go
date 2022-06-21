@@ -47,6 +47,8 @@ func userFromGitLabUser(glu *GitLabUser) *model.User {
 	} else {
 		user.FirstName = glu.Name
 	}
+	user.SetProp(SSOPreviousFirstName, user.FirstName)
+	user.SetProp(SSOPreviousLastName, user.LastName)
 	user.Email = glu.Email
 	user.Email = strings.ToLower(user.Email)
 	userId := glu.getAuthData()
