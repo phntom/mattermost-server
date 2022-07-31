@@ -136,7 +136,7 @@ func (a *App) deduplicateCreatePost(post *model.Post) (foundPost *model.Post, er
 
 	// If the other thread finished creating the post, return the created post back to the
 	// client, making the API call feel idempotent.
-	actualPost, err := a.GetSinglePost(postID)
+	actualPost, err := a.GetSinglePost(postID, false)
 	if err != nil {
 		return nil, model.NewAppError("deduplicateCreatePost", "api.post.deduplicate_create_post.failed_to_get", nil, err.Error(), http.StatusInternalServerError)
 	}
@@ -718,7 +718,7 @@ func (a *App) publishWebsocketEventForPermalinkPost(post *model.Post, message *m
 		return false, nil
 	}
 
-	previewedPost, err := a.GetSinglePost(previewedPostID)
+	previewedPost, err := a.GetSinglePost(previewedPostID, false)
 	if err != nil {
 		if err.StatusCode == http.StatusNotFound {
 			mlog.Warn("permalinked post not found", mlog.String("referenced_post_id", previewedPostID))
@@ -768,7 +768,7 @@ func (a *App) publishWebsocketEventForPermalinkPost(post *model.Post, message *m
 }
 
 func (a *App) PatchPost(c *request.Context, postID string, patch *model.PostPatch) (*model.Post, *model.AppError) {
-	post, err := a.GetSinglePost(postID)
+	post, err := a.GetSinglePost(postID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -840,8 +840,8 @@ func (a *App) GetPostsSince(options model.GetPostsSinceOptions) (*model.PostList
 	return postList, nil
 }
 
-func (a *App) GetSinglePost(postID string) (*model.Post, *model.AppError) {
-	post, err := a.Srv().Store.Post().GetSingle(postID, false)
+func (a *App) GetSinglePost(postID string, includeDeleted bool) (*model.Post, *model.AppError) {
+	post, err := a.Srv().Store.Post().GetSingle(postID, includeDeleted)
 	if err != nil {
 		var nfErr *store.ErrNotFound
 		switch {
@@ -1679,8 +1679,8 @@ func (a *App) GetThreadMembershipsForUser(userID, teamID string) ([]*model.Threa
 	return a.Srv().Store.Thread().GetMembershipsForUser(userID, teamID)
 }
 
-func (a *App) GetPostIfAuthorized(postID string, session *model.Session) (*model.Post, *model.AppError) {
-	post, err := a.GetSinglePost(postID)
+func (a *App) GetPostIfAuthorized(postID string, session *model.Session, includeDeleted bool) (*model.Post, *model.AppError) {
+	post, err := a.GetSinglePost(postID, includeDeleted)
 	if err != nil {
 		return nil, err
 	}
@@ -1716,4 +1716,48 @@ func (a *App) GetPostsByIds(postIDs []string) ([]*model.Post, *model.AppError) {
 	}
 
 	return posts, nil
+}
+
+func (a *App) GetTopThreadsForTeamSince(teamID, userID string, opts *model.InsightsOpts) (*model.TopThreadList, *model.AppError) {
+	if !a.Config().FeatureFlags.InsightsEnabled {
+		return nil, model.NewAppError("GetTopChannelsForTeamSince", "app.insights.feature_disabled", nil, "", http.StatusNotImplemented)
+	}
+
+	topThreads, err := a.Srv().Store.Thread().GetTopThreadsForTeamSince(teamID, userID, opts.StartUnixMilli, opts.Page*opts.PerPage, opts.PerPage)
+	if err != nil {
+		return nil, model.NewAppError("GetTopChannelsForTeamSince", "app.post.get_top_threads_for_team_since.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	topThreadsWithEmbedAndImage, err := includeEmbedsAndImages(a, topThreads, userID)
+	if err != nil {
+		return nil, model.NewAppError("GetTopChannelsForTeamSince", "app.post.get_top_threads_for_team_since.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return topThreadsWithEmbedAndImage, nil
+}
+
+func (a *App) GetTopThreadsForUserSince(teamID, userID string, opts *model.InsightsOpts) (*model.TopThreadList, *model.AppError) {
+	if !a.Config().FeatureFlags.InsightsEnabled {
+		return nil, model.NewAppError("GetTopChannelsForTeamSince", "app.insights.feature_disabled", nil, "", http.StatusNotImplemented)
+	}
+
+	topThreads, err := a.Srv().Store.Thread().GetTopThreadsForUserSince(teamID, userID, opts.StartUnixMilli, opts.Page*opts.PerPage, opts.PerPage)
+	if err != nil {
+		return nil, model.NewAppError("GetTopChannelsForTeamSince", "app.post.get_top_threads_for_team_since.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	topThreadsWithEmbedAndImage, err := includeEmbedsAndImages(a, topThreads, userID)
+	if err != nil {
+		return nil, model.NewAppError("GetTopChannelsForUserSince", "app.post.get_top_threads_for_user_since.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return topThreadsWithEmbedAndImage, nil
+}
+
+func includeEmbedsAndImages(a *App, topThreadList *model.TopThreadList, userID string) (*model.TopThreadList, error) {
+	for _, topThread := range topThreadList.Items {
+		topThread.Post = a.PreparePostForClientWithEmbedsAndImages(topThread.Post, false, false)
+		sanitizedPost, err := a.SanitizePostMetadataForUser(topThread.Post, userID)
+		if err != nil {
+			return nil, err
+		}
+		topThread.Post = sanitizedPost
+	}
+	return topThreadList, nil
 }

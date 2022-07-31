@@ -19,6 +19,7 @@ import (
 	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 	"github.com/mattermost/mattermost-server/v6/store"
 	"github.com/mattermost/mattermost-server/v6/testlib"
+	"github.com/mattermost/mattermost-server/v6/utils"
 	"github.com/mattermost/mattermost-server/v6/utils/fileutils"
 )
 
@@ -1966,7 +1967,7 @@ func TestImportimportMultiplePostLines(t *testing.T) {
 	require.Nil(t, err, "Failed to get user from database.")
 
 	// Count the number of posts in the testing team.
-	initialPostCount, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(team.Id, false, false)
+	initialPostCount, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(&model.PostCountOptions{TeamId: team.Id})
 	require.NoError(t, nErr)
 
 	// Try adding an invalid post in dry run mode.
@@ -2472,7 +2473,7 @@ func TestImportimportMultiplePostLines(t *testing.T) {
 	require.Nil(t, err, "Failed to get channel from database.")
 
 	// Count the number of posts in the team2.
-	initialPostCountForTeam2, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(team2.Id, false, false)
+	initialPostCountForTeam2, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(&model.PostCountOptions{TeamId: team2.Id})
 	require.NoError(t, nErr)
 
 	// Try adding two valid posts in apply mode.
@@ -2578,7 +2579,7 @@ func TestImportImportPost(t *testing.T) {
 	require.Nil(t, appErr, "Failed to get user from database.")
 
 	// Count the number of posts in the testing team.
-	initialPostCount, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(team.Id, false, false)
+	initialPostCount, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(&model.PostCountOptions{TeamId: team.Id})
 	require.NoError(t, nErr)
 
 	time := model.GetMillis()
@@ -3095,6 +3096,7 @@ func TestImportImportPost(t *testing.T) {
 	})
 
 	t.Run("Reply CreateAt before parent post CreateAt", func(t *testing.T) {
+		t.Skip("MM-44922")
 		now := model.GetMillis()
 		before := now - 10
 		data := LineImportWorkerData{
@@ -3325,7 +3327,7 @@ func TestImportImportDirectPost(t *testing.T) {
 	directChannel = channel
 
 	// Get the number of posts in the system.
-	result, err := th.App.Srv().Store.Post().AnalyticsPostCount("", false, false)
+	result, err := th.App.Srv().Store.Post().AnalyticsPostCount(&model.PostCountOptions{})
 	require.NoError(t, err)
 	initialPostCount := result
 	initialDate := model.GetMillis()
@@ -3686,7 +3688,7 @@ func TestImportImportDirectPost(t *testing.T) {
 	groupChannel = channel
 
 	// Get the number of posts in the system.
-	result, nErr := th.App.Srv().Store.Post().AnalyticsPostCount("", false, false)
+	result, nErr := th.App.Srv().Store.Post().AnalyticsPostCount(&model.PostCountOptions{})
 	require.NoError(t, nErr)
 	initialPostCount = result
 
@@ -4178,6 +4180,12 @@ func TestImportImportEmoji(t *testing.T) {
 	data = EmojiImportData{Name: ptrStr("smiley"), Image: ptrStr(testImage)}
 	err = th.App.importEmoji(&data, false)
 	assert.Nil(t, err, "System emoji should not fail")
+
+	largeImage := filepath.Join(testsDir, "large_image_file.jpg")
+	data = EmojiImportData{Name: ptrStr(model.NewId()), Image: ptrStr(largeImage)}
+	err = th.App.importEmoji(&data, false)
+	require.NotNil(t, err)
+	require.Contains(t, err.DetailedError, utils.SizeLimitExceeded.Error())
 }
 
 func TestImportAttachment(t *testing.T) {

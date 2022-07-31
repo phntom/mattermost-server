@@ -65,8 +65,6 @@ type FeatureFlags struct {
 
 	InsightsEnabled bool
 
-	CloudFree bool
-
 	CommandPalette bool
 
 	AdvancedTextEditor bool
@@ -91,8 +89,7 @@ func (f *FeatureFlags) SetDefaults() {
 	f.EnableInactivityCheckJob = true
 	f.UseCaseOnboarding = true
 	f.GraphQL = false
-	f.InsightsEnabled = false
-	f.CloudFree = false
+	f.InsightsEnabled = true
 	f.CommandPalette = false
 	f.AdvancedTextEditor = true
 	f.CallsEnabled = true

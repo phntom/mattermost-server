@@ -14,6 +14,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v6/app/email"
@@ -28,6 +29,118 @@ import (
 	"github.com/mattermost/mattermost-server/v6/store"
 	"github.com/mattermost/mattermost-server/v6/store/sqlstore"
 )
+
+type teamServiceWrapper struct {
+	app AppIface
+}
+
+func (w *teamServiceWrapper) GetMember(teamID, userID string) (*model.TeamMember, error) {
+	return w.app.GetTeamMember(teamID, userID)
+}
+
+func (w *teamServiceWrapper) CreateMember(ctx *request.Context, teamID, userID string) (*model.TeamMember, error) {
+	return w.app.AddTeamMember(ctx, teamID, userID)
+}
+
+func (a *App) AdjustTeamsFromProductLimits(teamLimits *model.TeamsLimits) *model.AppError {
+	maxActiveTeams := *teamLimits.Active
+	teams, appErr := a.GetAllTeams()
+	if appErr != nil {
+		return appErr
+	}
+
+	if teams == nil {
+		return nil
+	}
+	// Sort the list of teams based on their creation date
+	sort.Slice(teams, func(i, j int) bool {
+		return teams[i].CreateAt < teams[j].CreateAt
+	})
+
+	var activeTeams []*model.Team
+	var cloudArchivedTeams []*model.Team
+	for _, team := range teams {
+		if team.DeleteAt == 0 {
+			activeTeams = append(activeTeams, team)
+		}
+		if team.DeleteAt > 0 && team.CloudLimitsArchived {
+			cloudArchivedTeams = append(cloudArchivedTeams, team)
+		}
+	}
+
+	if len(activeTeams) > maxActiveTeams {
+		// If there are more active teams than allowed, we must archive them
+		// Remove the first n elements (where n is the allowed number of teams) so they aren't archived
+
+		teamsToArchive := activeTeams[maxActiveTeams:]
+
+		for _, team := range teamsToArchive {
+			cloudLimitsArchived := true
+			// Archive the remainder
+			patch := model.TeamPatch{CloudLimitsArchived: &cloudLimitsArchived}
+			_, err := a.PatchTeam(team.Id, &patch)
+			if err != nil {
+				return err
+			}
+			err = a.SoftDeleteTeam(team.Id)
+			if err != nil {
+				return err
+			}
+		}
+	} else if len(activeTeams) < maxActiveTeams && len(cloudArchivedTeams) > 0 {
+		// If the number of activeTeams is less than the allowed limit, and there are some cloudArchivedTeams, we can restore these cloudArchivedTeams
+		activeTeamsBeforeLimit := maxActiveTeams - len(activeTeams)
+		teamsToRestore := cloudArchivedTeams
+		// If the number of active teams remaining before the limit is hit is fewer than the number of cloudArchivedTeams, trim the list (still according to CreateAt)
+		// Otherwise, we can restore all of the cloudArchivedTeams without hitting the limit, so don't filter the list
+		if activeTeamsBeforeLimit < len(cloudArchivedTeams) {
+			teamsToRestore = cloudArchivedTeams[:(activeTeamsBeforeLimit)]
+		}
+
+		cloudLimitsArchived := false
+		patch := &model.TeamPatch{CloudLimitsArchived: &cloudLimitsArchived}
+		for _, team := range teamsToRestore {
+			err := a.RestoreTeam(team.Id)
+			if err != nil {
+				return err
+			}
+
+			_, err = a.PatchTeam(team.Id, patch)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (a *App) SoftDeleteAllTeamsExcept(teamID string) *model.AppError {
+	teams, appErr := a.GetAllTeams()
+	if appErr != nil {
+		return appErr
+	}
+
+	if teams == nil {
+		return nil
+	}
+	cloudLimitsArchived := true
+	patch := &model.TeamPatch{CloudLimitsArchived: &cloudLimitsArchived}
+	for _, team := range teams {
+		if team.Id != teamID {
+			_, err := a.PatchTeam(team.Id, patch)
+			if err != nil {
+				return err
+			}
+
+			err = a.SoftDeleteTeam(team.Id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
 
 func (a *App) CreateTeam(c *request.Context, team *model.Team) (*model.Team, *model.AppError) {
 	rteam, err := a.ch.srv.teamService.CreateTeam(team)
@@ -672,21 +785,6 @@ func (a *App) JoinUserToTeam(c *request.Context, team *model.Team, user *model.U
 		return teamMember, nil
 	}
 
-	if pluginsEnvironment := a.GetPluginsEnvironment(); pluginsEnvironment != nil {
-		var actor *model.User
-		if userRequestorId != "" {
-			actor, _ = a.GetUser(userRequestorId)
-		}
-
-		a.Srv().Go(func() {
-			pluginContext := pluginContext(c)
-			pluginsEnvironment.RunMultiPluginHook(func(hooks plugin.Hooks) bool {
-				hooks.UserHasJoinedTeam(pluginContext, teamMember, actor)
-				return true
-			}, plugin.UserHasJoinedTeamID)
-		})
-	}
-
 	if _, err := a.Srv().Store.User().UpdateUpdateAt(user.Id); err != nil {
 		return nil, model.NewAppError("JoinUserToTeam", "app.user.update_update.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
@@ -717,6 +815,21 @@ func (a *App) JoinUserToTeam(c *request.Context, team *model.Team, user *model.U
 	a.ClearSessionCacheForUser(user.Id)
 	a.InvalidateCacheForUser(user.Id)
 	a.invalidateCacheForUserTeams(user.Id)
+
+	if pluginsEnvironment := a.GetPluginsEnvironment(); pluginsEnvironment != nil {
+		var actor *model.User
+		if userRequestorId != "" {
+			actor, _ = a.GetUser(userRequestorId)
+		}
+
+		a.Srv().Go(func() {
+			pluginContext := pluginContext(c)
+			pluginsEnvironment.RunMultiPluginHook(func(hooks plugin.Hooks) bool {
+				hooks.UserHasJoinedTeam(pluginContext, teamMember, actor)
+				return true
+			}, plugin.UserHasJoinedTeamID)
+		})
+	}
 
 	message := model.NewWebSocketEvent(model.WebsocketEventAddedToTeam, "", "", user.Id, nil)
 	message.Add("team_id", team.Id)

@@ -108,6 +108,10 @@ func (fi *FileInfo) IsImage() bool {
 	return strings.HasPrefix(fi.MimeType, "image")
 }
 
+func (fi *FileInfo) IsSvg() bool {
+	return fi.MimeType == "image/svg+xml"
+}
+
 func NewInfo(name string) *FileInfo {
 	info := &FileInfo{
 		Name: name,

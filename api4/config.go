@@ -62,6 +62,7 @@ func getConfig(c *Context, w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		c.Err = model.NewAppError("getConfig", "api.config.get_config.restricted_merge.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	auditRec.Success()
@@ -137,6 +138,7 @@ func updateConfig(c *Context, w http.ResponseWriter, r *http.Request) {
 	})
 	if err1 != nil {
 		c.Err = model.NewAppError("updateConfig", "api.config.update_config.restricted_merge.app_error", nil, err1.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	// Do not allow plugin uploads to be toggled through the API
@@ -150,6 +152,11 @@ func updateConfig(c *Context, w http.ResponseWriter, r *http.Request) {
 	// Do not allow marketplace URL to be toggled through the API if EnableUploads are disabled.
 	if cfg.PluginSettings.EnableUploads != nil && !*appCfg.PluginSettings.EnableUploads {
 		*cfg.PluginSettings.MarketplaceURL = *appCfg.PluginSettings.MarketplaceURL
+	}
+
+	if err := c.App.CheckFreemiumLimitsForConfigSave(appCfg, cfg); err != nil {
+		c.Err = err
+		return
 	}
 
 	// There are some settings that cannot be changed in a cloud env
@@ -190,7 +197,8 @@ func updateConfig(c *Context, w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if mergeErr != nil {
-		c.Err = model.NewAppError("updateConfig", "api.config.update_config.restricted_merge.app_error", nil, err.Error(), http.StatusInternalServerError)
+		c.Err = model.NewAppError("updateConfig", "api.config.update_config.restricted_merge.app_error", nil, mergeErr.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	auditRec.Success()
@@ -286,6 +294,11 @@ func patchConfig(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if err := c.App.CheckFreemiumLimitsForConfigSave(appCfg, cfg); err != nil {
+		c.Err = err
+		return
+	}
+
 	// There are some settings that cannot be changed in a cloud env
 	if c.App.Channels().License() != nil && *c.App.Channels().License().Features.Cloud {
 		if cfg.ComplianceSettings.Directory != nil && *appCfg.ComplianceSettings.Directory != *cfg.ComplianceSettings.Directory {
@@ -336,7 +349,8 @@ func patchConfig(c *Context, w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	if mergeErr != nil {
-		c.Err = model.NewAppError("patchConfig", "api.config.patch_config.restricted_merge.app_error", nil, err.Error(), http.StatusInternalServerError)
+		c.Err = model.NewAppError("patchConfig", "api.config.patch_config.restricted_merge.app_error", nil, mergeErr.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")

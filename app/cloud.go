@@ -37,6 +37,23 @@ func (a *App) SendPaymentFailedEmail(failedPayment *model.FailedPayment) *model.
 	return nil
 }
 
+func (a *App) AdjustInProductLimits(limits *model.ProductLimits, subscription *model.Subscription) *model.AppError {
+	if limits.Teams != nil && limits.Teams.Active != nil && *limits.Teams.Active > 0 {
+		err := a.AdjustTeamsFromProductLimits(limits.Teams)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getNextBillingDateString() string {
+	now := time.Now()
+	t := time.Date(now.Year(), now.Month()+1, 1, 0, 0, 0, 0, time.UTC)
+	return fmt.Sprintf("%s %d, %d", t.Month(), t.Day(), t.Year())
+}
+
 func (a *App) SendUpgradeConfirmationEmail() *model.AppError {
 	sysAdmins, e := a.getSysAdminsEmailRecipients()
 	if e != nil {
@@ -52,11 +69,7 @@ func (a *App) SendUpgradeConfirmationEmail() *model.AppError {
 		return model.NewAppError("app.SendCloudUpgradeConfirmationEmail", "app.user.send_emails.app_error", nil, "", http.StatusInternalServerError)
 	}
 
-	// Build readable trial end date
-	// Trial end is passed as unix timestamp in ms
-	endTimeStamp := subscription.TrialEndAt / 1000
-	t := time.Unix(endTimeStamp, 0)
-	trialEndDate := fmt.Sprintf("%s %d, %d", t.Month(), t.Day(), t.Year())
+	billingDate := getNextBillingDateString()
 
 	// we want to at least have one email sent out to an admin
 	countNotOks := 0
@@ -67,7 +80,7 @@ func (a *App) SendUpgradeConfirmationEmail() *model.AppError {
 			name = admin.Username
 		}
 
-		err := a.Srv().EmailService.SendCloudUpgradeConfirmationEmail(admin.Email, name, trialEndDate, admin.Locale, *a.Config().ServiceSettings.SiteURL, subscription.GetWorkSpaceNameFromDNS())
+		err := a.Srv().EmailService.SendCloudUpgradeConfirmationEmail(admin.Email, name, billingDate, admin.Locale, *a.Config().ServiceSettings.SiteURL, subscription.GetWorkSpaceNameFromDNS())
 		if err != nil {
 			a.Log().Error("Error sending trial ended email to", mlog.String("email", admin.Email), mlog.Err(err))
 			countNotOks++

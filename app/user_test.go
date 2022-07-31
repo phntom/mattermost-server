@@ -254,16 +254,16 @@ func TestCreateUser(t *testing.T) {
 			[]string{
 				`
 			package main
-	
+
 			import (
 				"github.com/mattermost/mattermost-server/v6/plugin"
 				"github.com/mattermost/mattermost-server/v6/model"
 			)
-	
+
 			type MyPlugin struct {
 				plugin.MattermostPlugin
 			}
-	
+
 			func (p *MyPlugin) UserHasBeenCreated(c *plugin.Context, user *model.User) {
 				user.Nickname = "sanitized"
 				if len(user.Password) > 0 {
@@ -271,7 +271,7 @@ func TestCreateUser(t *testing.T) {
 				}
 				p.API.UpdateUser(user)
 			}
-	
+
 			func main() {
 				plugin.ClientMain(&MyPlugin{})
 			}
@@ -1725,6 +1725,7 @@ func TestUpdateThreadReadForUser(t *testing.T) {
 }
 
 func TestCreateUserWithInitialPreferences(t *testing.T) {
+	t.Skip("MM-45159")
 	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
@@ -1735,30 +1736,64 @@ func TestCreateUserWithInitialPreferences(t *testing.T) {
 		preferences, appErr := th.App.GetPreferencesForUser(testUser.Id)
 		require.Nil(t, appErr)
 
-		tutorialStepPref := preferences[1]
-		recommendedNextStepsPref := preferences[0]
+		tutorialStepPref := preferences[2]
+		recommendedNextStepsPref := preferences[1]
+		insightsPref := preferences[0]
 
 		assert.Equal(t, tutorialStepPref.Name, testUser.Id)
 		assert.Equal(t, recommendedNextStepsPref.Category, model.PreferenceRecommendedNextSteps)
 		assert.Equal(t, recommendedNextStepsPref.Name, "hide")
 		assert.Equal(t, recommendedNextStepsPref.Value, "false")
+		assert.Equal(t, insightsPref.Name, "insights_tutorial_state")
+		assert.Equal(t, insightsPref.Value, "{\"insights_modal_viewed\":true}")
+	})
+
+	t.Run("successfully create a user with insights feature flag disabled", func(t *testing.T) {
+		th.Server.configStore.SetReadOnlyFF(false)
+		defer th.Server.configStore.SetReadOnlyFF(true)
+		th.App.UpdateConfig(func(cfg *model.Config) { cfg.FeatureFlags.InsightsEnabled = false })
+		defer th.App.UpdateConfig(func(cfg *model.Config) { cfg.FeatureFlags.InsightsEnabled = true })
+		testUser := th.CreateUser()
+		defer th.App.PermanentDeleteUser(th.Context, testUser)
+
+		preferences, appErr := th.App.GetPreferencesForUser(testUser.Id)
+		require.Nil(t, appErr)
+
+		tutorialStepPref := preferences[2]
+		recommendedNextStepsPref := preferences[1]
+		insightsPref := preferences[0]
+
+		assert.Equal(t, tutorialStepPref.Name, testUser.Id)
+		assert.Equal(t, recommendedNextStepsPref.Category, model.PreferenceRecommendedNextSteps)
+		assert.Equal(t, recommendedNextStepsPref.Name, "hide")
+		assert.Equal(t, recommendedNextStepsPref.Value, "false")
+		assert.Equal(t, insightsPref.Name, "insights_tutorial_state")
+		assert.Equal(t, insightsPref.Value, "{\"insights_modal_viewed\":false}")
 	})
 
 	t.Run("successfully create a guest user with initial tutorial and recommended steps preferences", func(t *testing.T) {
+		th.Server.configStore.SetReadOnlyFF(false)
+		defer th.Server.configStore.SetReadOnlyFF(true)
+		th.App.UpdateConfig(func(cfg *model.Config) { cfg.FeatureFlags.InsightsEnabled = true })
 		testUser := th.CreateGuest()
 		defer th.App.PermanentDeleteUser(th.Context, testUser)
 
 		preferences, appErr := th.App.GetPreferencesForUser(testUser.Id)
 		require.Nil(t, appErr)
 
-		assert.Equal(t, testUser.Id, preferences[0].UserId)
-		assert.Equal(t, model.PreferenceRecommendedNextSteps, preferences[0].Category)
-		assert.Equal(t, "hide", preferences[0].Name)
-		assert.Equal(t, "false", preferences[0].Value)
-
 		assert.Equal(t, testUser.Id, preferences[1].UserId)
-		assert.Equal(t, model.PreferenceCategoryTutorialSteps, preferences[1].Category)
-		assert.Equal(t, testUser.Id, preferences[1].Name)
-		assert.Equal(t, "0", preferences[1].Value)
+		assert.Equal(t, model.PreferenceRecommendedNextSteps, preferences[1].Category)
+		assert.Equal(t, "hide", preferences[1].Name)
+		assert.Equal(t, "false", preferences[1].Value)
+
+		assert.Equal(t, testUser.Id, preferences[2].UserId)
+		assert.Equal(t, model.PreferenceCategoryTutorialSteps, preferences[2].Category)
+		assert.Equal(t, testUser.Id, preferences[2].Name)
+		assert.Equal(t, "0", preferences[2].Value)
+
+		assert.Equal(t, testUser.Id, preferences[0].UserId)
+		assert.Equal(t, model.PreferenceCategoryInsights, preferences[0].Category)
+		assert.Equal(t, model.PreferenceNameInsights, preferences[0].Name)
+		assert.Equal(t, "{\"insights_modal_viewed\":true}", preferences[0].Value)
 	})
 }
