@@ -1104,7 +1104,7 @@ func (ss *SqlStore) ensureMinimumDBVersion(ver string) (bool, error) {
 	case model.DatabaseDriverMysql:
 		// Usually a version string is of the form 5.6.49-log, 10.4.5-MariaDB etc.
 		if strings.Contains(strings.ToLower(ver), "maria") {
-			mlog.Debug("MariaDB detected. Skipping version check.")
+			mlog.Warn("MariaDB detected. You are using an unsupported database. Please consider using MySQL or Postgres.")
 			return true, nil
 		}
 		parts := strings.Split(ver, "-")
@@ -1167,7 +1167,7 @@ func (ss *SqlStore) ensureDatabaseCollation() error {
 		}
 
 		if tableCollation != connCollation.Value {
-			mlog.Warn("Table collation mismatch", mlog.String("table_name", tableName), mlog.String("expected", connCollation.Value), mlog.String("found", tableCollation))
+			mlog.Warn("Table collation mismatch", mlog.String("table_name", tableName), mlog.String("connection_collation", connCollation.Value), mlog.String("table_collation", tableCollation))
 		}
 	}
 

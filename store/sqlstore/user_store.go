@@ -932,7 +932,7 @@ func (us SqlUserStore) GetProfilesByUsernames(usernames []string, viewRestrictio
 	query = applyViewRestrictionsFilter(query, viewRestrictions, true)
 
 	query = query.
-		Where(map[string]interface{}{
+		Where(map[string]any{
 			"Username": usernames,
 		}).
 		OrderBy("u.Username ASC")
@@ -1021,13 +1021,13 @@ func (us SqlUserStore) GetProfileByIds(ctx context.Context, userIds []string, op
 
 	users := []*model.User{}
 	query := us.usersQuery.
-		Where(map[string]interface{}{
+		Where(map[string]any{
 			"u.Id": userIds,
 		}).
 		OrderBy("u.Username ASC")
 
 	if options.Since > 0 {
-		query = query.Where(sq.Gt(map[string]interface{}{
+		query = query.Where(sq.Gt(map[string]any{
 			"u.UpdateAt": options.Since,
 		}))
 	}
@@ -1499,18 +1499,32 @@ func (us SqlUserStore) SearchNotInGroup(groupID string, term string, options *mo
 func generateSearchQuery(query sq.SelectBuilder, terms []string, fields []string, isPostgreSQL bool) sq.SelectBuilder {
 	for _, term := range terms {
 		searchFields := []string{}
-		termArgs := []interface{}{}
+		termArgs := []any{}
+		var dbSpecificTerm string
+
+		if isPostgreSQL {
+			// Escaping the : in case of a Postgres search.
+			term = strings.ReplaceAll(term, ":", "\\:")
+		}
+
 		for _, field := range fields {
 			if isPostgreSQL {
-				searchFields = append(searchFields, fmt.Sprintf("lower(%s) LIKE lower(?) escape '*' ", field))
+				if strings.TrimLeft(term, "@") == "" {
+					// For wildcard search, we need to fall back to pattern matching.
+					searchFields = append(searchFields, fmt.Sprintf("%s ILIKE ? escape '*' ", field))
+					dbSpecificTerm = fmt.Sprintf("%s%%", strings.TrimLeft(term, "@"))
+				} else {
+					searchFields = append(searchFields, fmt.Sprintf("to_tsvector(lower(%[1]s)) @@ to_tsquery(concat(lower(?),':*'))", field))
+					dbSpecificTerm = strings.TrimLeft(term, "@")
+				}
 			} else {
 				searchFields = append(searchFields, fmt.Sprintf("%s LIKE ? escape '*' ", field))
+				dbSpecificTerm = fmt.Sprintf("%s%%", strings.TrimLeft(term, "@"))
 			}
-			termArgs = append(termArgs, fmt.Sprintf("%s%%", strings.TrimLeft(term, "@")))
+			termArgs = append(termArgs, dbSpecificTerm)
 		}
 		query = query.Where(fmt.Sprintf("(%s)", strings.Join(searchFields, " OR ")), termArgs...)
 	}
-
 	return query
 }
 
@@ -1762,7 +1776,7 @@ func (us SqlUserStore) GetUsersBatchForIndexing(startTime int64, startFileID str
 
 	teamMembers := []*model.TeamMember{}
 	teamMembersQuery, args, _ := us.getQueryBuilder().
-		Select("TeamId, UserId, Roles, DeleteAt, (SchemeGuest IS NOT NULL AND SchemeGuest) as SchemeGuest, SchemeUser, SchemeAdmin").
+		Select("TeamId, UserId, Roles, DeleteAt, CreateAt, (SchemeGuest IS NOT NULL AND SchemeGuest) as SchemeGuest, SchemeUser, SchemeAdmin").
 		From("TeamMembers").
 		Where(sq.Eq{"UserId": userIds, "DeleteAt": 0}).
 		ToSql()
@@ -1859,11 +1873,11 @@ func applyViewRestrictionsFilter(query sq.SelectBuilder, restrictions *model.Vie
 		return query.Where("1 = 0")
 	}
 
-	teams := make([]interface{}, len(restrictions.Teams))
+	teams := make([]any, len(restrictions.Teams))
 	for i, v := range restrictions.Teams {
 		teams[i] = v
 	}
-	channels := make([]interface{}, len(restrictions.Channels))
+	channels := make([]any, len(restrictions.Channels))
 	for i, v := range restrictions.Channels {
 		channels[i] = v
 	}
