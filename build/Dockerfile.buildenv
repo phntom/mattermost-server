@@ -9,10 +9,10 @@ ENV MM_NO_DOCKER="true"
 ENV RUN_SERVER_IN_BACKGROUND="false"
 ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
-ENV BUILD_VERSION="7.1"
-ENV BUILD_NUMBER="7.1.3"
-ENV BUILD_DATE="Mon 01 Aug 2022 16:46:18 IDT"
-ENV BUILD_HASH="b3e69a24a10f486494656d174de08f4c07893d9c"
+ENV BUILD_VERSION="7.3"
+ENV BUILD_NUMBER="7.3.0"
+ENV BUILD_DATE="Sun 18 Sep 2022 19:33:30 IDT"
+ENV BUILD_HASH="fddcc15c0a141e06a970e9052b8cf75f3f58da52"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -51,4 +51,4 @@ COPY --from=builder /home/mattermost-server/mattermost /mattermost/bin/
 
 # rm -rf dist/*
 # cp -r client/* dist/
-# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:7.1.3
+# docker build . --pull -f build/Dockerfile.buildenv -t phntom/mattermost-team-edition:7.3.0

@@ -539,15 +539,6 @@ func (a *App) GetUsersInChannelByStatus(options *model.UserGetOptions) ([]*model
 func (a *App) GetUsersInChannelByAdmin(options *model.UserGetOptions) ([]*model.User, *model.AppError) {
 	users, err := a.Srv().Store.User().GetProfilesInChannelByAdmin(options)
 	if err != nil {
-		return nil, model.NewAppError("GetUsersInChannelByAdmin", "app.user.get_profiles.app_error", nil, "", http.StatusInternalServerError).Wrap(err)
-	}
-
-	return users, nil
-}
-
-func (a *App) GetUsersInChannelByAdmin(options *model.UserGetOptions) ([]*model.User, *model.AppError) {
-	users, err := a.Srv().Store.User().GetProfilesInChannelByAdmin(options)
-	if err != nil {
 		return nil, model.NewAppError("GetUsersInChannelByAdmin", "app.user.get_profiles.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 
