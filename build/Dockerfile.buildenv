@@ -11,8 +11,8 @@ ENV MM_CLUSTERSETTINGS_ENABLE="true"
 ENV BUILD_ENTERPRISE_READY="false"
 ENV BUILD_VERSION="7.3"
 ENV BUILD_NUMBER="7.3.0"
-ENV BUILD_DATE="Sun 18 Sep 2022 19:33:30 IDT"
-ENV BUILD_HASH="fddcc15c0a141e06a970e9052b8cf75f3f58da52"
+ENV BUILD_DATE="Mon 19 Sep 2022 11:01:39 IDT"
+ENV BUILD_HASH="fec6be56449aa7879dd35034b47d5ec064c52abc"
 
 ENV BUILD_ENTERPRISE_READY="false"
 RUN git pull
@@ -32,9 +32,9 @@ RUN go mod vendor
 RUN go build -o mattermost -ldflags "-X \"github.com/mattermost/mattermost-server/v6/model.BuildEnterpriseReady=$BUILD_ENTERPRISE_READY\" -X \"github.com/mattermost/mattermost-server/v6/model.CurrentVersion=${BUILD_VERSION}.0\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildNumber=$BUILD_NUMBER\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildDate=$BUILD_DATE\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHash=$BUILD_HASH\" -X \"github.com/mattermost/mattermost-server/v6/model.BuildHashEnterprise=none\"" ./cmd/mattermost/main.go
 
 
-FROM mattermost/mattermost-team-edition:7.1.2
-RUN wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.6.0/com.mattermost.plugin-todo-0.6.0.tar.gz" && \
-  wget -P prepackaged_plugins "https://github.com/mattermost/mattermost-plugin-todo/releases/download/v0.6.0/com.mattermost.plugin-todo-0.6.0.tar.gz.sig"
+FROM mattermost/mattermost-team-edition:7.3.0
+COPY com.mattermost.plugin-todo-0.6.0.tar.gz prepackaged_plugins/
+COPY com.mattermost.plugin-todo-0.6.0.tar.gz.sig prepackaged_plugins/
 
 #USER 0
 #RUN apk add --no-cache git make musl-dev go libc6-compat
