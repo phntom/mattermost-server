@@ -30,7 +30,7 @@ func init() {
 	einterfaces.RegisterOAuthProvider(model.UserAuthServiceGitlab, provider)
 }
 
-func userFromGitLabUser(glu *GitLabUser) *model.User {
+func userFromGitLabUser1(glu *GitLabUser) *model.User {
 	user := &model.User{}
 	username := glu.Username
 	if username == "" {
@@ -47,8 +47,6 @@ func userFromGitLabUser(glu *GitLabUser) *model.User {
 	} else {
 		user.FirstName = glu.Name
 	}
-	user.SetProp(SSOPreviousFirstName, user.FirstName)
-	user.SetProp(SSOPreviousLastName, user.LastName)
 	user.Email = glu.Email
 	user.Email = strings.ToLower(user.Email)
 	userId := glu.getAuthData()

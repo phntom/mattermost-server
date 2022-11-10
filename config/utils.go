@@ -22,7 +22,7 @@ func marshalConfig(cfg *model.Config) ([]byte, error) {
 }
 
 // desanitize replaces fake settings with their actual values.
-func desanitize(actual, target *model.Config) {
+func desanitize1(actual, target *model.Config) {
 	if target.LdapSettings.BindPassword != nil && *target.LdapSettings.BindPassword == model.FakeSetting {
 		*target.LdapSettings.BindPassword = *actual.LdapSettings.BindPassword
 	}
@@ -44,22 +44,6 @@ func desanitize(actual, target *model.Config) {
 
 	if target.GoogleSettings.Secret != nil && *target.GoogleSettings.Secret == model.FakeSetting {
 		target.GoogleSettings.Secret = actual.GoogleSettings.Secret
-	}
-
-	if target.FacebookSettings.Secret != nil && *target.FacebookSettings.Secret == model.FakeSetting {
-		target.FacebookSettings.Secret = actual.FacebookSettings.Secret
-	}
-
-	if target.LinkedInSettings.Secret != nil && *target.LinkedInSettings.Secret == model.FakeSetting {
-		target.LinkedInSettings.Secret = actual.LinkedInSettings.Secret
-	}
-
-	if target.GitHubSettings.Secret != nil && *target.GitHubSettings.Secret == model.FakeSetting {
-		target.GitHubSettings.Secret = actual.GitHubSettings.Secret
-	}
-
-	if target.TwitterSettings.Secret != nil && *target.TwitterSettings.Secret == model.FakeSetting {
-		target.TwitterSettings.Secret = actual.TwitterSettings.Secret
 	}
 
 	if target.Office365Settings.Secret != nil && *target.Office365Settings.Secret == model.FakeSetting {

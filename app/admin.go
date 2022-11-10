@@ -27,7 +27,8 @@ var latestVersionCache = cache.NewLRU(cache.LRUOptions{
 func (s *Server) GetLogs(page, perPage int) ([]string, *model.AppError) {
 	var lines []string
 
-	if s.Cluster != nil && *s.platform.Config().ClusterSettings.Enable {
+	license := s.License()
+	if license != nil && *license.Features.Cluster && s.Cluster != nil && *s.platform.Config().ClusterSettings.Enable {
 		if info := s.Cluster.GetMyClusterInfo(); info != nil {
 			lines = append(lines, "-----------------------------------------------------------------------------------------------------------")
 			lines = append(lines, "-----------------------------------------------------------------------------------------------------------")
@@ -227,8 +228,9 @@ func (a *App) TestEmail(userID string, cfg *model.Config) *model.AppError {
 	}
 
 	T := i18n.GetUserTranslations(user.Locale)
+	license := a.Srv().License()
 	mailConfig := a.Srv().MailServiceConfig()
-	if err := mail.SendMailUsingConfig(user.Email, T("api.admin.test_email.subject"), T("api.admin.test_email.body"), mailConfig, true, "", "", "", ""); err != nil {
+	if err := mail.SendMailUsingConfig(user.Email, T("api.admin.test_email.subject"), T("api.admin.test_email.body"), mailConfig, license != nil && *license.Features.Compliance, "", "", "", ""); err != nil {
 		return model.NewAppError("testEmail", "app.admin.test_email.failure", map[string]any{"Error": err.Error()}, "", http.StatusInternalServerError)
 	}
 

@@ -1765,7 +1765,7 @@ func sendPasswordReset(c *Context, w http.ResponseWriter, r *http.Request) {
 	ReturnStatusOK(w)
 }
 
-func login(c *Context, w http.ResponseWriter, r *http.Request) {
+func login1(c *Context, w http.ResponseWriter, r *http.Request) {
 	// Mask all sensitive errors, with the exception of the following
 	defer func() {
 		if c.Err == nil {
@@ -1805,12 +1805,8 @@ func login(c *Context, w http.ResponseWriter, r *http.Request) {
 		openidEnabled := *config.OpenIdSettings.Enable
 		googleEnabled := *config.GoogleSettings.Enable
 		office365Enabled := *config.Office365Settings.Enable
-		facebookEnabled := *config.FacebookSettings.Enable
-		linkedinEnabled := *config.LinkedInSettings.Enable
-		githubEnabled := *config.GitHubSettings.Enable
-		twitterEnabled := *config.TwitterSettings.Enable
 
-		if samlEnabled || gitlabEnabled || googleEnabled || office365Enabled || openidEnabled || facebookEnabled || linkedinEnabled || githubEnabled || twitterEnabled {
+		if samlEnabled || gitlabEnabled || googleEnabled || office365Enabled || openidEnabled {
 			c.Err = model.NewAppError("login", "api.user.login.invalid_credentials_sso", nil, "", http.StatusUnauthorized)
 			return
 		}

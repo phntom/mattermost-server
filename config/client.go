@@ -215,7 +215,7 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 }
 
 // GenerateLimitedClientConfig renders the given configuration for an untrusted client.
-func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *model.License) map[string]string {
+func GenerateLimitedClientConfig1(c *model.Config, telemetryID string, license *model.License) map[string]string {
 	props := make(map[string]string)
 
 	props["Version"] = model.CurrentVersion
@@ -315,12 +315,6 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 	props["EnableGuestAccounts"] = strconv.FormatBool(*c.GuestAccountsSettings.Enable)
 	props["GuestAccountsEnforceMultifactorAuthentication"] = strconv.FormatBool(*c.GuestAccountsSettings.EnforceMultifactorAuthentication)
 
-	props["EnableSignUpWithGoogle"] = strconv.FormatBool(*c.GoogleSettings.Enable)
-	props["EnableSignUpWithFacebook"] = strconv.FormatBool(*c.FacebookSettings.Enable)
-	props["EnableSignUpWithLinkedIn"] = strconv.FormatBool(*c.LinkedInSettings.Enable)
-	props["EnableSignUpWithGitHub"] = strconv.FormatBool(*c.GitHubSettings.Enable)
-	props["EnableSignUpWithTwitter"] = strconv.FormatBool(*c.TwitterSettings.Enable)
-
 	if license != nil {
 		if *license.Features.LDAP {
 			props["EnableLdap"] = strconv.FormatBool(*c.LdapSettings.Enable)
@@ -336,6 +330,10 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 			props["SamlLoginButtonColor"] = *c.SamlSettings.LoginButtonColor
 			props["SamlLoginButtonBorderColor"] = *c.SamlSettings.LoginButtonBorderColor
 			props["SamlLoginButtonTextColor"] = *c.SamlSettings.LoginButtonTextColor
+		}
+
+		if *license.Features.GoogleOAuth {
+			props["EnableSignUpWithGoogle"] = strconv.FormatBool(*c.GoogleSettings.Enable)
 		}
 
 		if *license.Features.Office365OAuth {

@@ -381,19 +381,13 @@ func (s *Server) StopPushNotificationsHubWorkers() {
 	s.PushNotificationsHub.stop()
 }
 
-func (a *App) rawSendToPushProxy(msg *model.PushNotification) (model.PushResponse, error) {
-
-
+func (a *App) rawSendToPushProxy1(msg *model.PushNotification) (model.PushResponse, error) {
 	msgJSON, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode to JSON: %w", err)
 	}
 
-	serverPrefix := *a.Config().EmailSettings.PushNotificationServer
-	if strings.Contains(msg.Platform, "custom") {
-		serverPrefix = *a.Config().EmailSettings.PushNotificationServerCustom
-	}
-	url := strings.TrimRight(serverPrefix, "/") + model.APIURLSuffixV1 + "/send_push"
+	url := strings.TrimRight(*a.Config().EmailSettings.PushNotificationServer, "/") + model.APIURLSuffixV1 + "/send_push"
 	request, err := http.NewRequest("POST", url, bytes.NewReader(msgJSON))
 	if err != nil {
 		return nil, err

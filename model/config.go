@@ -49,10 +49,6 @@ const (
 	ServiceGoogle    = "google"
 	ServiceOffice365 = "office365"
 	ServiceOpenid    = "openid"
-	ServiceFacebook  = "facebook"
-	ServiceLinkedin  = "linkedin"
-	ServiceGithub    = "github"
-	ServiceTwitter   = "twitter"
 
 	GenericNoChannelNotification = "generic_no_channel"
 	GenericNotification          = "generic"
@@ -1562,7 +1558,7 @@ func (s *FileSettings) ToFileBackendSettings(enableComplianceFeature bool, skipV
 	}
 }
 
-type EmailSettings struct {
+type EmailSettings1 struct {
 	EnableSignUpWithEmail             *bool   `access:"authentication_email"`
 	EnableSignInWithEmail             *bool   `access:"authentication_email"`
 	EnableSignInWithUsername          *bool   `access:"authentication_email"`
@@ -1582,7 +1578,6 @@ type EmailSettings struct {
 	ConnectionSecurity                *string `access:"environment_smtp,write_restrictable,cloud_restrictable"`
 	SendPushNotifications             *bool   `access:"environment_push_notification_server"`
 	PushNotificationServer            *string `access:"environment_push_notification_server"` // telemetry: none
-	PushNotificationServerCustom      *string `access:"environment_push_notification_server"` // telemetry: none
 	PushNotificationContents          *string `access:"site_notifications"`
 	PushNotificationBuffer            *int    // telemetry: none
 	EnableEmailBatching               *bool   `access:"site_notifications"`
@@ -3097,7 +3092,7 @@ const ConfigAccessTagAnySysConsoleRead = "*_read"
 //	    // PermissionManageSystem can always read the value.
 //	    Product bool `access:write_restrictable`
 //	}
-type Config struct {
+type Config1 struct {
 	ServiceSettings           ServiceSettings
 	TeamSettings              TeamSettings
 	ClientRequirements        ClientRequirements
@@ -3117,10 +3112,6 @@ type Config struct {
 	GoogleSettings            SSOSettings
 	Office365Settings         Office365Settings
 	OpenIdSettings            SSOSettings
-	LinkedInSettings          SSOSettings
-	FacebookSettings          SSOSettings
-	GitHubSettings            SSOSettings
-	TwitterSettings           SSOSettings
 	LdapSettings              LdapSettings
 	ComplianceSettings        ComplianceSettings
 	LocalizationSettings      LocalizationSettings
@@ -3175,7 +3166,7 @@ func (o *Config) ToJSONFiltered(tagType, tagValue string) ([]byte, error) {
 	return json.Marshal(filteredConfigMap)
 }
 
-func (o *Config) GetSSOService(service string) *SSOSettings {
+func (o *Config) GetSSOService1(service string) *SSOSettings {
 	switch service {
 	case ServiceGitlab:
 		return &o.GitLabSettings
@@ -3185,14 +3176,6 @@ func (o *Config) GetSSOService(service string) *SSOSettings {
 		return o.Office365Settings.SSOSettings()
 	case ServiceOpenid:
 		return &o.OpenIdSettings
-	case ServiceFacebook:
-		return &o.FacebookSettings
-	case ServiceLinkedin:
-		return &o.LinkedInSettings
-	case ServiceGithub:
-		return &o.GitHubSettings
-	case ServiceTwitter:
-		return &o.TwitterSettings
 	}
 
 	return nil
@@ -3209,7 +3192,7 @@ func (o *Config) isUpdate() bool {
 	return o.ServiceSettings.SiteURL != nil
 }
 
-func (o *Config) SetDefaults() {
+func (o *Config) SetDefaults1() {
 	isUpdate := o.isUpdate()
 
 	o.LdapSettings.SetDefaults()
@@ -3232,10 +3215,6 @@ func (o *Config) SetDefaults() {
 	o.GitLabSettings.setDefaults("", "", "", "", "")
 	o.GoogleSettings.setDefaults(GoogleSettingsDefaultScope, GoogleSettingsDefaultAuthEndpoint, GoogleSettingsDefaultTokenEndpoint, GoogleSettingsDefaultUserAPIEndpoint, "")
 	o.OpenIdSettings.setDefaults(OpenidSettingsDefaultScope, "", "", "", "#145DBF")
-	o.FacebookSettings.setDefaults("", "", "", "", "")
-	o.LinkedInSettings.setDefaults("", "", "", "", "")
-	o.GitHubSettings.setDefaults("", "", "", "", "")
-	o.TwitterSettings.setDefaults("", "", "", "", "")
 	o.ServiceSettings.SetDefaults(isUpdate)
 	o.PasswordSettings.SetDefaults()
 	o.TeamSettings.SetDefaults()
@@ -3910,22 +3889,6 @@ func (o *Config) Sanitize() {
 
 	if o.OpenIdSettings.Secret != nil && *o.OpenIdSettings.Secret != "" {
 		*o.OpenIdSettings.Secret = FakeSetting
-	}
-
-	if o.FacebookSettings.Secret != nil && *o.FacebookSettings.Secret != "" {
-		*o.FacebookSettings.Secret = FakeSetting
-	}
-
-	if o.LinkedInSettings.Secret != nil && *o.LinkedInSettings.Secret != "" {
-		*o.LinkedInSettings.Secret = FakeSetting
-	}
-
-	if o.GitHubSettings.Secret != nil && *o.GitHubSettings.Secret != "" {
-		*o.GitHubSettings.Secret = FakeSetting
-	}
-
-	if o.TwitterSettings.Secret != nil && *o.TwitterSettings.Secret != "" {
-		*o.TwitterSettings.Secret = FakeSetting
 	}
 
 	if o.SqlSettings.DataSource != nil {
