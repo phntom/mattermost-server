@@ -86,7 +86,7 @@ func RegisterNotificationInterface(f func(*App) einterfaces.NotificationInterfac
 	notificationInterface = f
 }
 
-func (s *Server) initEnterprise() {
+func (s *Server) initEnterprisePhntom() {
 	if cloudInterface != nil {
 		s.Cloud = cloudInterface(s)
 	}

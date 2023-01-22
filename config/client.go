@@ -214,7 +214,7 @@ func GenerateClientConfig(c *model.Config, telemetryID string, license *model.Li
 }
 
 // GenerateLimitedClientConfig renders the given configuration for an untrusted client.
-func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *model.License) map[string]string {
+func GenerateLimitedClientConfigPhntom(c *model.Config, telemetryID string, license *model.License) map[string]string {
 	props := make(map[string]string)
 
 	props["Version"] = model.CurrentVersion

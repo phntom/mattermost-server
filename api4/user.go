@@ -1821,7 +1821,7 @@ func sendPasswordReset(c *Context, w http.ResponseWriter, r *http.Request) {
 	ReturnStatusOK(w)
 }
 
-func login(c *Context, w http.ResponseWriter, r *http.Request) {
+func loginPhntom(c *Context, w http.ResponseWriter, r *http.Request) {
 	// Mask all sensitive errors, with the exception of the following
 	defer func() {
 		if c.Err == nil {

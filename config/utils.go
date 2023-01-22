@@ -22,7 +22,7 @@ func marshalConfig(cfg *model.Config) ([]byte, error) {
 }
 
 // desanitize replaces fake settings with their actual values.
-func desanitize(actual, target *model.Config) {
+func desanitizePhntom(actual, target *model.Config) {
 	if target.LdapSettings.BindPassword != nil && *target.LdapSettings.BindPassword == model.FakeSetting {
 		*target.LdapSettings.BindPassword = *actual.LdapSettings.BindPassword
 	}

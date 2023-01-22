@@ -1583,7 +1583,7 @@ func (s *FileSettings) ToFileBackendSettings(enableComplianceFeature bool, skipV
 	}
 }
 
-type EmailSettings struct {
+type EmailSettingsPhntom struct {
 	EnableSignUpWithEmail             *bool   `access:"authentication_email"`
 	EnableSignInWithEmail             *bool   `access:"authentication_email"`
 	EnableSignInWithUsername          *bool   `access:"authentication_email"`
@@ -3136,7 +3136,7 @@ const ConfigAccessTagAnySysConsoleRead = "*_read"
 //	    // PermissionManageSystem can always read the value.
 //	    Product bool `access:write_restrictable`
 //	}
-type Config struct {
+type ConfigPhntom struct {
 	ServiceSettings           ServiceSettings
 	TeamSettings              TeamSettings
 	ClientRequirements        ClientRequirements
@@ -3211,7 +3211,7 @@ func (o *Config) ToJSONFiltered(tagType, tagValue string) ([]byte, error) {
 	return json.Marshal(filteredConfigMap)
 }
 
-func (o *Config) GetSSOService(service string) *SSOSettings {
+func (o *Config) GetSSOServicePhntom(service string) *SSOSettings {
 	switch service {
 	case ServiceGitlab:
 		return &o.GitLabSettings
@@ -3237,7 +3237,7 @@ func (o *Config) isUpdate() bool {
 	return o.ServiceSettings.SiteURL != nil
 }
 
-func (o *Config) SetDefaults() {
+func (o *Config) SetDefaultsPhntom() {
 	isUpdate := o.isUpdate()
 
 	o.LdapSettings.SetDefaults()

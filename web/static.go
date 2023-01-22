@@ -20,7 +20,7 @@ import (
 
 var robotsTxt = []byte("User-agent: *\nDisallow: /\n")
 
-func (w *Web) InitStatic() {
+func (w *Web) InitStaticPhntom() {
 	if *w.srv.Config().ServiceSettings.WebserverMode != "disabled" {
 		if err := utils.UpdateAssetsSubpathFromConfig(w.srv.Config()); err != nil {
 			mlog.Error("Failed to update assets subpath from config", mlog.Err(err))
