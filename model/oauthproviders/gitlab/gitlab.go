@@ -30,7 +30,7 @@ func init() {
 	einterfaces.RegisterOAuthProvider(model.UserAuthServiceGitlab, provider)
 }
 
-func userFromGitLabUser(glu *GitLabUser) *model.User {
+func UserFromGitLabUserPhntom(glu *GitLabUser) *model.User {
 	user := &model.User{}
 	username := glu.Username
 	if username == "" {

@@ -1603,6 +1603,7 @@ type EmailSettings struct {
 	ConnectionSecurity                *string `access:"environment_smtp,write_restrictable,cloud_restrictable"`
 	SendPushNotifications             *bool   `access:"environment_push_notification_server"`
 	PushNotificationServer            *string `access:"environment_push_notification_server"` // telemetry: none
+	PushNotificationServerCustom      *string `access:"environment_push_notification_server"` // telemetry: none
 	PushNotificationContents          *string `access:"site_notifications"`
 	PushNotificationBuffer            *int    // telemetry: none
 	EnableEmailBatching               *bool   `access:"site_notifications"`
@@ -1617,7 +1618,7 @@ type EmailSettings struct {
 	EnableInactivityEmail             *bool
 }
 
-func (s *EmailSettings) SetDefaults(isUpdate bool) {
+func (s *EmailSettings) SetDefaultsPhntom(isUpdate bool) {
 	if s.EnableSignUpWithEmail == nil {
 		s.EnableSignUpWithEmail = NewBool(true)
 	}
@@ -3171,6 +3172,10 @@ type Config struct {
 	GoogleSettings            SSOSettings
 	Office365Settings         Office365Settings
 	OpenIdSettings            SSOSettings
+	LinkedInSettings          SSOSettings
+	FacebookSettings          SSOSettings
+	GitHubSettings            SSOSettings
+	TwitterSettings           SSOSettings
 	LdapSettings              LdapSettings
 	ComplianceSettings        ComplianceSettings
 	LocalizationSettings      LocalizationSettings
@@ -3226,7 +3231,7 @@ func (o *Config) ToJSONFiltered(tagType, tagValue string) ([]byte, error) {
 	return json.Marshal(filteredConfigMap)
 }
 
-func (o *Config) GetSSOService(service string) *SSOSettings {
+func (o *Config) GetSSOServicePhntom(service string) *SSOSettings {
 	switch service {
 	case ServiceGitlab:
 		return &o.GitLabSettings
@@ -3252,7 +3257,7 @@ func (o *Config) isUpdate() bool {
 	return o.ServiceSettings.SiteURL != nil
 }
 
-func (o *Config) SetDefaults() {
+func (o *Config) SetDefaultsPhntom() {
 	isUpdate := o.isUpdate()
 
 	o.LdapSettings.SetDefaults()
